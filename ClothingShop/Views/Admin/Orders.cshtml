@@ -1,0 +1,188 @@
+@model List<Order>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="fas fa-shopping-bag me-2"></i>Quản lý đơn hàng
+        </h2>
+        <a href="/Admin/Reports/ExportOrdersExcel?status=@ViewBag.Status&search=@ViewBag.Search" class="btn btn-success">
+            <i class="fas fa-file-excel me-2"></i>Xuất Excel
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- BỘ LỌC -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Trạng thái</label>
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">Tất cả</option>
+                        <option value="Chờ xác nhận" selected="@(ViewBag.Status == "Chờ xác nhận")">Chờ xác nhận</option>
+                        <option value="Chờ lấy hàng" selected="@(ViewBag.Status == "Chờ lấy hàng")">Chờ lấy hàng</option>
+                        <option value="Chờ giao hàng" selected="@(ViewBag.Status == "Chờ giao hàng")">Chờ giao hàng</option>
+                        <option value="Đã giao" selected="@(ViewBag.Status == "Đã giao")">Đã giao</option>
+                        <option value="Đã hủy" selected="@(ViewBag.Status == "Đã hủy")">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Tìm kiếm (ID đơn hàng hoặc tên khách)</label>
+                    <input type="text" name="search" class="form-control" placeholder="Nhập ID hoặc tên khách hàng..." value="@ViewBag.Search">
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                    </button>
+                    <a href="/Admin/Orders" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- THỐNG KÊ NHANH -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card border-warning">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-warning mb-0">@Model.Count(o => o.Status == "Chờ xác nhận")</h4>
+                    <small class="text-muted">Chờ xác nhận</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-info">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-info mb-0">@Model.Count(o => o.Status == "Chờ lấy hàng")</h4>
+                    <small class="text-muted">Chờ lấy hàng</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-primary">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-primary mb-0">@Model.Count(o => o.Status == "Chờ giao hàng")</h4>
+                    <small class="text-muted">Chờ giao hàng</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-success">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-success mb-0">@Model.Count(o => o.Status == "Đã giao")</h4>
+                    <small class="text-muted">Đã giao</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-danger">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-danger mb-0">@Model.Count(o => o.Status == "Đã hủy")</h4>
+                    <small class="text-muted">Đã hủy</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-dark">
+                <div class="card-body text-center p-2">
+                    <h4 class="text-dark mb-0">@Model.Count()</h4>
+                    <small class="text-muted">Tổng đơn</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG ĐỚN HÀNG -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Không có đơn hàng nào</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Sản phẩm</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold">#@order.Id</td>
+                                    <td>
+                                        <div>@order.User.FullName</div>
+                                        <small class="text-muted">@order.User.Email</small>
+                                    </td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@order.Items.Count sản phẩm</td>
+                                    <td class="fw-bold text-danger">@order.TotalAmount.ToString("N0")₫</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = order.Status switch
+                                            {
+                                                "Chờ xác nhận" => "bg-warning text-dark",
+                                                "Chờ lấy hàng" => "bg-info",
+                                                "Chờ giao hàng" => "bg-primary",
+                                                "Đã giao" => "bg-success",
+                                                "Đã hủy" => "bg-danger",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @badgeClass">@order.Status</span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PHÂN TRANG -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="/Admin/Orders?page=@i&status=@ViewBag.Status&search=@ViewBag.Search">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>

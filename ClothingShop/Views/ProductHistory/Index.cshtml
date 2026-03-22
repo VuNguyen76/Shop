@@ -1,0 +1,87 @@
+@model List<ClothingShop.Models.ProductView>
+@{
+    ViewData["Title"] = "Lịch sử xem sản phẩm";
+}
+
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="fas fa-history me-2"></i>Sản phẩm đã xem</h2>
+            <p class="text-muted">Bạn đã xem @Model.Count sản phẩm</p>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-md-12 text-end">
+                <form action="/ProductHistory/Clear" method="post" class="d-inline" onsubmit="return confirm('Xóa toàn bộ lịch sử?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-1"></i>Xóa tất cả
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var view in Model)
+            {
+                <div class="col-md-3">
+                    <div class="card h-100 shadow-sm">
+                        <a href="/Products/Details/@view.ProductId">
+                            <img src="@view.Product?.ImageUrl" class="card-img-top" alt="@view.Product?.Name" style="height: 250px; object-fit: cover;">
+                        </a>
+                        <div class="card-body">
+                            <h6 class="card-title">@view.Product?.Name</h6>
+                            <p class="text-danger fw-bold">@view.Product?.Price.ToString("N0")₫</p>
+                            <small class="text-muted">Xem lúc: @view.ViewedAt.ToString("dd/MM HH:mm")</small>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <form action="/ProductHistory/Remove" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@view.ProductId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="fas fa-times me-1"></i>Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center mb-5">
+            <i class="fas fa-info-circle me-2"></i>
+            Bạn chưa xem sản phẩm nào. Hãy khám phá các sản phẩm của chúng tôi!
+        </div>
+
+        @if (ViewBag.RecommendedProducts != null)
+        {
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h4 class="mb-4"><i class="fas fa-star me-2 text-warning"></i>Sản phẩm đề xuất</h4>
+                </div>
+            </div>
+            <div class="row g-4">
+                @foreach (var product in ViewBag.RecommendedProducts)
+                {
+                    <div class="col-md-3">
+                        <div class="card h-100 shadow-sm">
+                            <a href="/Products/Details/@product.Id" class="text-decoration-none">
+                                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
+                                <div class="card-body">
+                                    <h6 class="card-title text-dark">@product.Name</h6>
+                                    <p class="text-danger fw-bold mb-0">@product.Price.ToString("N0")₫</p>
+                                    <small class="text-muted">@product.Category</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

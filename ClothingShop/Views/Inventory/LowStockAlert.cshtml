@@ -1,0 +1,141 @@
+@model List<ClothingShop.Models.Product>
+@{
+    ViewData["Title"] = "Danh sách Tồn kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- THỐNG KÊ -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Tổng sản phẩm</h6>
+                <h3 class="mb-0">@ViewBag.TotalProducts</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Hết hàng</h6>
+                <h3 class="mb-0">@ViewBag.OutOfStock</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Sắp hết (≤10)</h6>
+                <h3 class="mb-0">@ViewBag.LowStock</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Còn hàng (>10)</h6>
+                <h3 class="mb-0">@ViewBag.InStock</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TÌM KIẾM VÀ LỌC -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search">
+                </div>
+                <div class="col-md-4">
+                    <select name="sortBy" class="form-select">
+                        <option value="">Tồn kho thấp trước</option>
+                        <option value="stock_desc" selected="@(ViewBag.SortBy == "stock_desc")">Tồn kho cao trước</option>
+                        <option value="name_asc" selected="@(ViewBag.SortBy == "name_asc")">Tên A-Z</option>
+                        <option value="name_desc" selected="@(ViewBag.SortBy == "name_desc")">Tên Z-A</option>
+                        <option value="price_asc" selected="@(ViewBag.SortBy == "price_asc")">Giá thấp - cao</option>
+                        <option value="price_desc" selected="@(ViewBag.SortBy == "price_desc")">Giá cao - thấp</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Tìm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- BẢNG TỒN KHO -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Danh sách Tồn kho</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Giá nhập</th>
+                        <th>Giá bán</th>
+                        <th class="text-center">Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        <tr class="@(product.Quantity == 0 ? "table-danger" : product.Quantity <= 10 ? "table-warning" : "")">
+                            <td>
+                                <img src="@product.ImageUrl" alt="@product.Name" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            </td>
+                            <td><strong>@product.Name</strong></td>
+                            <td>@product.Category</td>
+                            <td>
+                                @if (product.Cost.HasValue && product.Cost.Value > 0)
+                                {
+                                    <strong>@product.Cost.Value.ToString("N0")₫</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td><strong>@product.Price.ToString("N0")₫</strong></td>
+                            <td class="text-center">
+                                <span class="badge fs-6 @(product.Quantity == 0 ? "bg-danger" : product.Quantity <= 10 ? "bg-warning" : "bg-success")">
+                                    @product.Quantity
+                                </span>
+                            </td>
+                            <td>
+                                @if (product.Quantity == 0)
+                                {
+                                    <span class="badge bg-danger">Hết hàng</span>
+                                }
+                                else if (product.Quantity <= 10)
+                                {
+                                    <span class="badge bg-warning">Sắp hết</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Còn hàng</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="/Admin/Inventory/EditProduct/@product.Id" class="btn btn-primary btn-sm" title="Chỉnh sửa số lượng & giá">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

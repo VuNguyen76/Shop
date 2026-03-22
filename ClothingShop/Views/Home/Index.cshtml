@@ -1,0 +1,557 @@
+@{
+    ViewData["Title"] = "Trang chủ";
+    var fashionCategories = ViewBag.FashionCategories as List<ClothingShop.Models.FashionCategory> ?? new List<ClothingShop.Models.FashionCategory>();
+    var bestSellingProducts = ViewBag.BestSellingProducts as List<ClothingShop.Models.Product> ?? new List<ClothingShop.Models.Product>();
+}
+
+<!-- HERO BANNER WITH TEXT OVERLAY -->
+<section class="hero-section position-relative mb-5">
+    <img src="https://images.puma.com/image/upload/q_auto,f_auto,w_1440/regional/%7Eregional%7ETHA%7Eothers%7EKOP%7E002+-+Collections%7E004+-+AW25%7ESpeedcat_Metallic%7E25AW_Ecom_SP_Speedcat_Metallic_Homepage_Full-Bleed-Hero_Large-Desk_2000x694px.jpg/fmt/jpg/fmt/png" 
+         alt="Speedcat Collection" class="w-100 hero-image">
+    <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center">
+        <div class="container">
+            <div class="hero-content text-white pb-5 pb-md-0" style="max-width: 500px;">
+                <h1 class="hero-title fw-bold mb-2" style="font-size: 3.5rem; letter-spacing: 2px; line-height: 1;">SPEEDCAT</h1>
+                <p class="hero-subtitle mb-4" style="font-size: 1rem; font-weight: 400;">FAST AND FEARLESS</p>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-light hero-btn px-4 py-2 fw-bold text-uppercase" style="font-size: 0.875rem; letter-spacing: 1px;">Mua ngay</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FASHION CATEGORY CAROUSEL - CHỈ HIỂN THỊ KHI CÓ DỮ LIỆU -->
+@if (fashionCategories.Count > 0)
+{
+    <section class="container-fluid px-0 mb-5">
+        <div class="text-center mb-4">
+            <h2 class="display-5 fw-bold text-uppercase">Fashion Category</h2>
+            <p class="text-muted">Danh mục thời trang</p>
+        </div>
+        
+        <div class="featured-carousel position-relative">
+            <button class="featured-btn featured-btn-prev" onclick="scrollFeatured(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="featured-track" id="featuredTrack">
+                @foreach (var category in fashionCategories)
+                {
+                    <div class="featured-item">
+                        <a href="@(string.IsNullOrEmpty(category.LinkUrl) ? Url.Action("Index", "Products") : category.LinkUrl)" class="featured-card">
+                            <img src="@category.ImageUrl" alt="@category.Title">
+                            <div class="featured-overlay">
+                                <h3 class="text-white fw-bold">@category.Title</h3>
+                                <p class="text-white">Khám phá ngay</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+            
+            <button class="featured-btn featured-btn-next" onclick="scrollFeatured(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </section>
+}
+
+<!-- SẢN PHẨM BÁN CHẠY -->
+@if (bestSellingProducts.Count > 0)
+{
+    <section class="container-fluid px-0 mb-5">
+        <div class="container">
+            <div class="mb-4">
+                <h2 class="fw-bold text-uppercase" style="font-size: 1.5rem; letter-spacing: 1px;">
+                    <i class="fas fa-fire text-danger me-2"></i>Sản phẩm bán chạy
+                </h2>
+                <p class="text-muted">Được yêu thích nhất</p>
+            </div>
+        </div>
+        
+        <div class="product-carousel position-relative">
+            <button class="product-btn product-btn-prev" onclick="scrollProducts(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="product-track" id="productTrack">
+                @foreach (var p in bestSellingProducts)
+                {
+                    <div class="product-item">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="product-link">
+                            <div class="product-image-wrapper position-relative">
+                                @if (p.IsNew)
+                                {
+                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2" style="z-index: 5;">NEW</span>
+                                }
+                                <span class="badge bg-warning position-absolute top-0 end-0 m-2" style="z-index: 5;">
+                                    <i class="fas fa-fire"></i> Bán chạy
+                                </span>
+                                <img src="@p.ImageUrl" alt="@p.Name" class="product-image">
+                            </div>
+                            <div class="product-info text-center mt-3">
+                                <h6 class="product-name fw-bold mb-2">@p.Name</h6>
+                                <p class="product-category text-muted small mb-1">@p.Category - @p.Gender</p>
+                                <p class="product-price text-danger fw-bold mb-0">@(p.Price.ToString("#,##0"))₫</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+            
+            <button class="product-btn product-btn-next" onclick="scrollProducts(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <div class="container text-center mt-4">
+            <a asp-controller="Products" asp-action="Index" class="btn btn-dark btn-lg px-5">Xem tất cả sản phẩm</a>
+        </div>
+    </section>
+}
+
+<style>
+    /* HERO SECTION */
+    .hero-section {
+        height: auto;
+        min-height: 500px;
+        position: relative;
+        width: 100%;
+        overflow: visible;
+    }
+
+    @@media (max-width: 768px) {
+        .hero-section {
+            min-height: 400px;
+        }
+        .hero-title {
+            font-size: 2.5rem !important;
+        }
+    }
+
+    .hero-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    .hero-overlay {
+        background: transparent;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-content {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .hero-title {
+        text-shadow: none;
+    }
+
+    .hero-subtitle {
+        text-shadow: none;
+    }
+
+    .hero-btn {
+        border-radius: 0;
+        transition: all 0.3s ease;
+        background: white;
+        color: black;
+        border: none;
+    }
+
+    .hero-btn:hover {
+        background: #f0f0f0;
+        color: black;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* FEATURED CAROUSEL */
+    .featured-carousel {
+        position: relative;
+        padding: 0 60px;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .featured-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        gap: 20px;
+        padding: 20px 0;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .featured-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .featured-item {
+        flex: 0 0 calc(33.333% - 14px);
+        min-width: 300px;
+        max-width: 450px;
+    }
+
+    .featured-card {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        height: 500px;
+        text-decoration: none;
+        width: 100%;
+    }
+
+    .featured-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.5s ease;
+    }
+
+    .featured-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 30px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+    }
+
+    .featured-card:hover img {
+        transform: scale(1.1);
+    }
+
+    .featured-card:hover .featured-overlay {
+        transform: translateY(0);
+    }
+
+    .featured-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #000;
+        color: white;
+        border: none;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .featured-btn:hover {
+        background: #333;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .featured-btn-prev {
+        left: 0;
+    }
+
+    .featured-btn-next {
+        right: 0;
+    }
+
+    /* PRODUCT GRID */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+        max-width: 100%;
+    }
+
+    @@media (max-width: 1200px) {
+        .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .featured-item {
+            flex: 0 0 calc(50% - 10px);
+            min-width: 250px;
+        }
+        .featured-carousel {
+            padding: 0 40px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .hero-section {
+            height: 400px;
+        }
+        .hero-content h1 {
+            font-size: 2rem;
+        }
+        .featured-item {
+            flex: 0 0 calc(100% - 20px);
+            min-width: 280px;
+        }
+        .featured-carousel {
+            padding: 0 30px;
+        }
+        .featured-card {
+            height: 400px;
+        }
+    }
+
+    .product-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        width: 100%;
+    }
+
+    .product-image-wrapper {
+        overflow: hidden;
+        border-radius: 8px;
+        background: #f8f9fa;
+        aspect-ratio: 1;
+        width: 100%;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .product-link:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    .product-link:hover .product-image-wrapper {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Container constraints */
+    .container, .container-fluid {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .product-name {
+        height: 40px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .product-price {
+        font-size: 1.1rem;
+    }
+
+    /* PRODUCT CAROUSEL */
+    .product-carousel {
+        position: relative;
+        padding: 0 60px;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .product-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        gap: 20px;
+        padding: 20px 0;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .product-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .product-item {
+        flex: 0 0 calc(25% - 15px);
+        min-width: 250px;
+        max-width: 300px;
+    }
+
+    .product-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #000;
+        color: white;
+        border: none;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .product-btn:hover {
+        background: #333;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .product-btn-prev {
+        left: 0;
+    }
+
+    .product-btn-next {
+        right: 0;
+    }
+
+    @@media (max-width: 1200px) {
+        .product-item {
+            flex: 0 0 calc(33.333% - 14px);
+            min-width: 220px;
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .product-item {
+            flex: 0 0 calc(50% - 10px);
+            min-width: 200px;
+        }
+        .product-carousel {
+            padding: 0 40px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .product-item {
+            flex: 0 0 calc(100% - 20px);
+            min-width: 250px;
+        }
+        .product-carousel {
+            padding: 0 30px;
+        }
+    }
+</style>
+
+<script>
+    // Featured carousel với infinite loop
+    let isScrolling = false;
+    let scrollPosition = 0;
+    let animationId = null;
+    
+    function scrollFeatured(direction) {
+        const track = document.getElementById('featuredTrack');
+        const scrollAmount = track.offsetWidth * 0.8;
+        
+        // Tạm dừng auto scroll
+        isScrolling = true;
+        
+        track.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
+        
+        // Cập nhật scrollPosition
+        setTimeout(() => {
+            scrollPosition = track.scrollLeft;
+            isScrolling = false;
+        }, 500);
+    }
+
+    // Khởi tạo infinite carousel
+    function initInfiniteCarousel() {
+        const track = document.getElementById('featuredTrack');
+        if (!track) return;
+        
+        const items = Array.from(track.querySelectorAll('.featured-item'));
+        if (items.length === 0) return;
+        
+        // Auto scroll mượt mà
+        const scrollSpeed = 0.5; // pixels per frame
+        
+        function autoScroll() {
+            if (!isScrolling) {
+                scrollPosition += scrollSpeed;
+                track.scrollLeft = scrollPosition;
+                
+                // Tính toán kích thước
+                const maxScroll = track.scrollWidth - track.clientWidth;
+                
+                // Khi scroll đến cuối, reset về đầu
+                if (scrollPosition >= maxScroll) {
+                    scrollPosition = 0;
+                    track.scrollLeft = 0;
+                }
+            }
+            
+            animationId = requestAnimationFrame(autoScroll);
+        }
+        
+        // Bắt đầu auto scroll
+        autoScroll();
+        
+        // Tạm dừng khi hover
+        track.addEventListener('mouseenter', () => {
+            isScrolling = true;
+        });
+        
+        track.addEventListener('mouseleave', () => {
+            isScrolling = false;
+            scrollPosition = track.scrollLeft;
+        });
+        
+        // Tạm dừng khi user scroll thủ công
+        let userScrollTimeout;
+        track.addEventListener('scroll', (e) => {
+            // Chỉ xử lý nếu là user scroll (không phải auto scroll)
+            if (Math.abs(track.scrollLeft - scrollPosition) > 2) {
+                isScrolling = true;
+                clearTimeout(userScrollTimeout);
+                userScrollTimeout = setTimeout(() => {
+                    isScrolling = false;
+                    scrollPosition = track.scrollLeft;
+                }, 2000);
+            }
+        });
+    }
+    
+    // Khởi tạo khi trang load xong
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initInfiniteCarousel);
+    } else {
+        initInfiniteCarousel();
+    }
+
+    // Product carousel - chỉ có nút điều khiển, không auto scroll
+    function scrollProducts(direction) {
+        const track = document.getElementById('productTrack');
+        const scrollAmount = track.offsetWidth * 0.8;
+        track.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+</script>

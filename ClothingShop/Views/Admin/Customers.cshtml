@@ -1,0 +1,175 @@
+@model List<User>
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+    var orderStats = ViewBag.OrderStats as Dictionary<int, dynamic> ?? new Dictionary<int, dynamic>();
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-users me-2"></i>Quản lý khách hàng
+        </h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- BỘ LỌC -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" name="search" class="form-control" placeholder="Tên, email, số điện thoại..." value="@ViewBag.Search">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Giới tính</label>
+                    <select name="gender" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="Nam" selected="@(ViewBag.Gender == "Nam")">Nam</option>
+                        <option value="Nữ" selected="@(ViewBag.Gender == "Nữ")">Nữ</option>
+                        <option value="Khác" selected="@(ViewBag.Gender == "Khác")">Khác</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sắp xếp</label>
+                    <select name="sortBy" class="form-select">
+                        <option value="date_desc" selected="@(ViewBag.SortBy == "date_desc")">Mới nhất</option>
+                        <option value="date_asc" selected="@(ViewBag.SortBy == "date_asc")">Cũ nhất</option>
+                        <option value="name_asc" selected="@(ViewBag.SortBy == "name_asc")">Tên A-Z</option>
+                        <option value="name_desc" selected="@(ViewBag.SortBy == "name_desc")">Tên Z-A</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Lọc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH KHÁCH HÀNG -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Danh sách khách hàng
+                <span class="badge bg-light text-dark ms-2">@ViewBag.TotalItems khách hàng</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Giới tính</th>
+                                <th class="text-center">Đơn hàng</th>
+                                <th class="text-end">Tổng chi tiêu</th>
+                                <th>Ngày đăng ký</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in Model)
+                            {
+                                var stats = orderStats.ContainsKey(customer.Id) ? orderStats[customer.Id] : null;
+                                var totalOrders = stats?.TotalOrders ?? 0;
+                                var totalSpent = stats?.TotalSpent ?? 0m;
+                                
+                                <tr>
+                                    <td><strong>#@customer.Id</strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                @customer.FullName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@customer.FullName</div>
+                                                @if (customer.IsAdmin)
+                                                {
+                                                    <span class="badge bg-danger">Admin</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@customer.Email</td>
+                                    <td>@customer.PhoneNumber</td>
+                                    <td>@customer.Gender</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">@totalOrders</span>
+                                    </td>
+                                    <td class="text-end text-danger fw-bold">@totalSpent.ToString("N0")₫</td>
+                                    <td>@customer.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-center">
+                                        @if (customer.IsActive)
+                                        {
+                                            <span class="badge bg-success">Hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Đã khóa</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="Details" asp-route-id="@customer.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Không tìm thấy khách hàng nào</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- PHÂN TRANG -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="?page=@i&search=@ViewBag.Search&gender=@ViewBag.Gender&sortBy=@ViewBag.SortBy">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+</style>

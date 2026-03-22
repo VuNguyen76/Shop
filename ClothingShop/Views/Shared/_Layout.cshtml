@@ -1,0 +1,460 @@
+﻿@inject IHttpContextAccessor HttpContextAccessor
+@inject ClothingShop.Services.ICartService CartService
+@{
+    var cartCount = 0;
+    if (HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null)
+    {
+        cartCount = CartService.GetTotalItems();
+    }
+}
+<!DOCTYPE html>
+<html lang="vi"></html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - ClothingShop</title>
+    <!-- Bootstrap 5.3.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6.5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="bg-white d-flex flex-column min-vh-100" style="font-family: 'Roboto', sans-serif; padding-top: 0;">
+    <!-- NAVBAR ĐEN PUMA STYLE -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top" style="border-bottom: 1px solid #333; z-index: 1030;">
+        <div class="container-fluid px-4">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index" style="font-size: 1.5rem; letter-spacing: 1px;">
+                <i class="fas fa-shirt me-2"></i> CLOTHINGSHOP
+            </a>
+            
+            <!-- Mobile toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- MENU CHÍNH -->
+                <ul class="navbar-nav ms-5 me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3 @(ViewBag.CurrentAction == "Index" && string.IsNullOrEmpty(ViewBag.Gender) ? "active" : "")"
+                           asp-controller="Products" asp-action="Index">
+                            Tất cả sản phẩm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 @(ViewBag.Gender == "Nam" ? "active" : "")"
+                           asp-controller="Products" asp-action="Index" asp-route-gender="Nam">
+                            Nam
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 @(ViewBag.Gender == "Nữ" ? "active" : "")"
+                           asp-controller="Products" asp-action="Index" asp-route-gender="Nữ">
+                            Nữ
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Search Bar - Luôn hiển thị -->
+                <form class="d-flex me-3" asp-controller="Products" asp-action="Index" method="get" style="position: relative; width: 300px;">
+                    <input type="search" name="search" class="form-control bg-dark text-white border-0" 
+                           placeholder="Tìm kiếm..." value="@ViewBag.Search" style="border-radius: 20px; padding-right: 40px;">
+                    <button class="btn btn-link text-white p-0 position-absolute" type="submit" 
+                            style="right: 10px; top: 50%; transform: translateY(-50%);">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                
+                <!-- Right side icons -->
+                <div class="d-flex align-items-center gap-3">
+                    
+                    @if (HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null)
+                    {
+                        <!-- Notification Bell -->
+                        <button class="btn btn-link text-white p-0 position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#notificationOffcanvas">
+                            <i class="fas fa-bell fs-5"></i>
+                            @{
+                                var userId = int.Parse(HttpContextAccessor.HttpContext.Session.GetString("UserId")!);
+                                var unreadCount = Context.RequestServices.GetRequiredService<ClothingShop.Data.ApplicationDbContext>()
+                                    .Notifications.Count(n => n.UserId == userId && !n.IsRead);
+                            }
+                            @if (unreadCount > 0)
+                            {
+                                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" style="font-size: 0.65rem;">
+                                    @unreadCount
+                                </span>
+                            }
+                        </button>
+                    }
+                    
+                    <!-- Cart -->
+                    <a asp-controller="Cart" asp-action="Index" class="btn btn-link text-white p-0 position-relative text-decoration-none">
+                        <i class="fas fa-shopping-cart fs-5"></i>
+                        @if (cartCount > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" style="font-size: 0.65rem;">
+                                @cartCount
+                            </span>
+                        }
+                    </a>
+                    <!-- User -->
+                    <a class="btn btn-link text-white p-0" href="#" data-bs-toggle="offcanvas" data-bs-target="#userOffcanvas">
+                        <i class="fas fa-user fs-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TOAST NOTIFICATIONS -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show align-items-center text-white bg-success border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show align-items-center text-white bg-danger border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (TempData["Warning"] != null)
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show align-items-center text-white bg-warning border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Warning"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show align-items-center text-white bg-info border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-info-circle me-2"></i>@TempData["Info"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow-1" style="position: relative; z-index: 1;">
+        @RenderBody()
+    </main>
+
+    <!-- NÚT HỖ TRỢ NỔI -->
+    @if (HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null)
+    {
+        <a asp-controller="Support" asp-action="Index" class="btn btn-danger rounded-circle shadow-lg position-fixed" 
+           style="bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1050; display: flex; align-items: center; justify-content: center;"
+           title="Hỗ trợ khách hàng">
+            <i class="fas fa-headset fs-4"></i>
+        </a>
+    }
+
+    <!-- FOOTER TOP BANNER - CHỈ HIỂN THỊ Ở TRANG CHỦ -->
+    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index")
+    {
+        <div class="bg-light py-4 border-top">
+            <div class="container">
+                <div class="text-center">
+                    <h5 class="fw-bold mb-2">CLOTHINGSHOP - Quần áo, Giày dép & Phụ kiện</h5>
+                    <p class="text-muted mb-0">
+                        Chào mừng bạn đến với ClothingShop Việt Nam – Thương Hiệu Thời Trang Chất Lượng Cao. 
+                        Trải nghiệm mua sắm Quần áo, Giày dép, Phụ kiện cho Nam, Nữ và Trẻ em. 
+                        Đón đầu phong cách & sự thoải mái ngay hôm nay.
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- FOOTER -->
+    <footer class="bg-black text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <!-- Logo & Description -->
+            <div class="row mb-5 pb-4">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-shirt fs-3 me-3"></i>
+                        <h3 class="fw-bold mb-0" style="letter-spacing: 2px;">CLOTHINGSHOP</h3>
+                    </div>
+                    <p class="text-white-50 mb-3">Thời trang chất lượng cao cho mọi phong cách. Nơi bạn tìm thấy sự hoàn hảo cho phong cách riêng của mình.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white-50 hover-white-icon" title="Facebook">
+                            <i class="fab fa-facebook fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white-50 hover-white-icon" title="Instagram">
+                            <i class="fab fa-instagram fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white-50 hover-white-icon" title="Twitter">
+                            <i class="fab fa-twitter fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white-50 hover-white-icon" title="YouTube">
+                            <i class="fab fa-youtube fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white-50 hover-white-icon" title="TikTok">
+                            <i class="fab fa-tiktok fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-8">
+                    <div class="row">
+                        <div class="col-6 col-md-4 mb-4 mb-md-0">
+                            <h6 class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="fas fa-info-circle me-2"></i>Về Chúng Tôi
+                            </h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Giới thiệu</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Câu chuyện thương hiệu</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Tuyển dụng</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Tin tức</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-6 col-md-4 mb-4 mb-md-0">
+                            <h6 class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="fas fa-headset me-2"></i>Hỗ Trợ
+                            </h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Hướng dẫn mua hàng</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Chính sách đổi trả</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Chính sách bảo hành</a></li>
+                                <li class="mb-2"><a asp-controller="Support" asp-action="Index" class="text-white-50 text-decoration-none hover-white footer-link">Liên hệ hỗ trợ</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-12 col-md-4">
+                            <h6 class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="fas fa-user-shield me-2"></i>Khách Hàng
+                            </h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a asp-controller="Orders" asp-action="Index" class="text-white-50 text-decoration-none hover-white footer-link">Theo dõi đơn hàng</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Hướng dẫn thanh toán</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Câu hỏi thường gặp</a></li>
+                                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white footer-link">Chính sách bảo mật</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment & Contact Info -->
+            <div class="row py-4 align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <h6 class="text-white-50 mb-2 small">PHƯƠNG THỨC THANH TOÁN</h6>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <div class="bg-white rounded p-2" style="height: 35px; display: flex; align-items: center;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" style="height: 20px;">
+                        </div>
+                        <div class="bg-white rounded p-2" style="height: 35px; display: flex; align-items: center;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" style="height: 20px;">
+                        </div>
+                        <div class="bg-white rounded p-2" style="height: 35px; display: flex; align-items: center;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" style="height: 20px;">
+                        </div>
+                        <div class="bg-danger rounded p-2 text-white fw-bold" style="height: 35px; display: flex; align-items: center; padding: 0 10px !important;">
+                            MoMo
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6 class="text-white-50 mb-2 small">LIÊN HỆ</h6>
+                    <p class="mb-1 small"><i class="fas fa-phone me-2"></i>Hotline: <span class="text-white">1900 xxxx</span></p>
+                    <p class="mb-0 small"><i class="fas fa-envelope me-2"></i>Email: <span class="text-white">support@clothingshop.vn</span></p>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="row pt-4">
+                <div class="col-12 text-center">
+                    <p class="small text-white-50 mb-2">
+                        © @DateTime.Now.Year ClothingShop Việt Nam. All rights reserved.
+                    </p>
+                    <p class="small text-white-50 mb-0">
+                        Made with <i class="fas fa-heart text-danger"></i> in Vietnam
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .hover-white:hover {
+            color: #fff !important;
+        }
+        .hover-white-icon {
+            transition: all 0.3s ease;
+        }
+        .hover-white-icon:hover {
+            color: #fff !important;
+            transform: translateY(-3px);
+        }
+        .footer-link {
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        .footer-link:hover {
+            padding-left: 5px;
+        }
+        
+        /* Fix modal z-index to be above navbar */
+        .modal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop {
+            z-index: 1055 !important;
+        }
+        
+        /* Sticky Footer - Đảm bảo footer luôn ở dưới cùng */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+            margin-top: auto;
+            min-height: 400px; /* Chiều cao tối thiểu cố định */
+        }
+        
+        /* Cố định kích thước các phần trong footer */
+        footer .container {
+            max-width: 1200px;
+        }
+        footer .row {
+            min-height: auto;
+        }
+    </style>
+
+    @await Html.PartialAsync("_CartOffcanvas")
+    
+    @await Html.PartialAsync("_UserOffcanvas")
+    
+    @await Html.PartialAsync("_NotificationOffcanvas")
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/cart.js" asp-append-version="true"></script>
+    <script src="~/js/wishlist.js" asp-append-version="true"></script>
+    
+    <!-- Auto-hide Toast Notifications -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toasts = document.querySelectorAll('.toast');
+            toasts.forEach(function(toast) {
+                var bsToast = new bootstrap.Toast(toast, {
+                    autohide: true,
+                    delay: 5000
+                });
+                bsToast.show();
+            });
+        });
+    </script>
+    
+    <!-- Global Modal Backdrop Fix - ULTIMATE VERSION -->
+    <script>
+        // Giải pháp cuối cùng - force cleanup backdrop
+        (function() {
+            function forceCleanup() {
+                // Xóa tất cả backdrop
+                document.querySelectorAll('.modal-backdrop').forEach(function(el) {
+                    el.remove();
+                });
+                
+                // Kiểm tra modal còn mở không
+                var hasOpenModal = document.querySelector('.modal.show');
+                if (!hasOpenModal) {
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }
+            }
+            
+            // Chạy cleanup mỗi 500ms
+            setInterval(function() {
+                var backdrops = document.querySelectorAll('.modal-backdrop');
+                var openModals = document.querySelectorAll('.modal.show');
+                
+                // Nếu có backdrop nhưng không có modal nào mở
+                if (backdrops.length > 0 && openModals.length === 0) {
+                    forceCleanup();
+                }
+            }, 500);
+            
+            // Lắng nghe tất cả nút đóng modal
+            document.addEventListener('click', function(e) {
+                var target = e.target;
+                
+                // Nếu click vào nút close hoặc nút có data-bs-dismiss
+                if (target.classList.contains('btn-close') || 
+                    target.hasAttribute('data-bs-dismiss') ||
+                    target.closest('[data-bs-dismiss="modal"]')) {
+                    setTimeout(forceCleanup, 200);
+                }
+                
+                // Nếu click vào backdrop
+                if (target.classList.contains('modal-backdrop') || target.classList.contains('modal')) {
+                    setTimeout(forceCleanup, 200);
+                }
+            });
+            
+            // Lắng nghe ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    setTimeout(forceCleanup, 200);
+                }
+            });
+            
+            // Lắng nghe sự kiện hidden của Bootstrap
+            document.addEventListener('hidden.bs.modal', function() {
+                setTimeout(forceCleanup, 100);
+            });
+        })();
+    </script>
+    
+    <!-- Search Autocomplete -->
+    <script src="~/js/search-autocomplete.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

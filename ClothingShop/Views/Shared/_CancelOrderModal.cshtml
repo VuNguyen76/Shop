@@ -1,0 +1,38 @@
+@model Order
+
+<!-- Modal Hủy Đơn Hàng -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="cancelOrderForm" asp-controller="Orders" asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelModalLabel">
+                        <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng #@Model.Id.ToString("D6")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lưu ý:</strong> Bạn chỉ có thể hủy đơn hàng khi đơn đang ở trạng thái "Chờ xác nhận" hoặc "Chờ lấy hàng".
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lý do hủy đơn <span class="text-danger">*</span></label>
+                        <textarea name="cancelReason" id="cancelReason" class="form-control" rows="4" required 
+                                  placeholder="VD: Đặt nhầm sản phẩm, Tìm được giá rẻ hơn, Không cần nữa..."></textarea>
+                        <small class="text-muted">Vui lòng cho chúng tôi biết lý do để cải thiện dịch vụ</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Đóng
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-2"></i>Xác nhận hủy đơn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

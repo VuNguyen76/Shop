@@ -1,0 +1,272 @@
+@model List<ClothingShop.Models.FashionCategory>
+@{
+    ViewData["Title"] = "Quản lý Fashion Category";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Quản lý Fashion Category</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fas fa-plus me-2"></i>Thêm danh mục
+        </button>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Thứ tự</th>
+                            <th>Hình ảnh</th>
+                            <th>Tiêu đề</th>
+                            <th>Link</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.DisplayOrder</td>
+                                <td>
+                                    <img src="@item.ImageUrl" alt="@item.Title" style="width: 100px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                </td>
+                                <td>@item.Title</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.LinkUrl))
+                                    {
+                                        <a href="@item.LinkUrl" target="_blank" class="text-primary">@item.LinkUrl</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hiển thị</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Ẩn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="editCategory(@item.Id, '@item.Title', '@item.ImageUrl', '@item.LinkUrl', @item.DisplayOrder, @item.IsActive.ToString().ToLower())">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteCategory(@item.Id, '@item.Title')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CreateFashionCategory" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Fashion Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tiêu đề</label>
+                        <input type="text" id="addTitle" name="Title" class="form-control" required placeholder="VD: Áo, Quần, Váy...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hình ảnh</label>
+                        <div class="mb-2">
+                            <input type="file" id="addImageFile" name="imageFile" class="form-control" accept="image/*,.avif" onchange="previewAddImage(event)" />
+                            <small class="text-muted">Hỗ trợ: JPG, PNG, WebP, AVIF (tối đa 5MB)</small>
+                        </div>
+                        <div id="addImagePreview" class="mb-2" style="display: none;">
+                            <img id="addPreviewImg" src="" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
+                        </div>
+                        <div class="text-muted">Hoặc nhập URL:</div>
+                        <input type="text" id="addImageUrl" name="ImageUrl" class="form-control" placeholder="https://example.com/image.avif">
+                        <small class="text-muted">Chỉ cần upload file HOẶC nhập URL, không cần cả 2</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Danh mục sản phẩm</label>
+                        <select id="addCategorySelect" class="form-select">
+                            <option value="">-- Chọn danh mục để tự động tạo link --</option>
+                            @if (ViewBag.ProductCategories != null)
+                            {
+                                foreach (var cat in ViewBag.ProductCategories)
+                                {
+                                    <option value="@cat.Name">@cat.Name</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Hoặc nhập link thủ công bên dưới</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Link (tùy chọn)</label>
+                        <input type="text" id="addLinkUrl" name="LinkUrl" class="form-control" placeholder="/Products?category=Áo">
+                        <small class="text-muted">Link sẽ tự động tạo khi chọn danh mục</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thứ tự hiển thị</label>
+                        <input type="number" name="DisplayOrder" class="form-control" value="0" min="0">
+                        <small class="text-muted">Để 0 để tự động gán số tiếp theo. Hoặc nhập số thủ công (không được trùng).</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="addIsActive" name="IsActive" class="form-check-input" value="true" checked>
+                            <input type="hidden" id="addIsActiveHidden" name="IsActive" value="false">
+                            <label class="form-check-label" for="addIsActive">Hiển thị</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateFashionCategory" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="editId" name="Id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sửa Fashion Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tiêu đề</label>
+                        <input type="text" id="editTitle" name="Title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL Hình ảnh</label>
+                        <input type="text" id="editImageUrl" name="ImageUrl" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Danh mục sản phẩm</label>
+                        <select id="editCategorySelect" class="form-select">
+                            <option value="">-- Chọn danh mục để tự động tạo link --</option>
+                            @if (ViewBag.ProductCategories != null)
+                            {
+                                foreach (var cat in ViewBag.ProductCategories)
+                                {
+                                    <option value="@cat.Name">@cat.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Link (tùy chọn)</label>
+                        <input type="text" id="editLinkUrl" name="LinkUrl" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thứ tự hiển thị</label>
+                        <input type="number" id="editDisplayOrder" name="DisplayOrder" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="editIsActive" name="IsActive" class="form-check-input" value="true">
+                            <input type="hidden" id="editIsActiveHidden" name="IsActive" value="false">
+                            <label class="form-check-label" for="editIsActive">Hiển thị</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" asp-action="DeleteFashionCategory" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="deleteId" name="id">
+</form>
+
+<script>
+    // Preview ảnh khi upload (Add Modal)
+    function previewAddImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('addPreviewImg').src = e.target.result;
+                document.getElementById('addImagePreview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Xử lý checkbox IsActive (Add Modal)
+    document.getElementById('addIsActive').addEventListener('change', function() {
+        document.getElementById('addIsActiveHidden').disabled = this.checked;
+    });
+
+    // Xử lý checkbox IsActive (Edit Modal)
+    document.getElementById('editIsActive').addEventListener('change', function() {
+        document.getElementById('editIsActiveHidden').disabled = this.checked;
+    });
+
+    // Tự động tạo link khi chọn danh mục (Add Modal)
+    document.getElementById('addCategorySelect').addEventListener('change', function() {
+        const category = this.value;
+        if (category) {
+            document.getElementById('addLinkUrl').value = `/Products?category=${encodeURIComponent(category)}`;
+        }
+    });
+
+    // Tự động tạo link khi chọn danh mục (Edit Modal)
+    document.getElementById('editCategorySelect').addEventListener('change', function() {
+        const category = this.value;
+        if (category) {
+            document.getElementById('editLinkUrl').value = `/Products?category=${encodeURIComponent(category)}`;
+        }
+    });
+
+    function editCategory(id, title, imageUrl, linkUrl, displayOrder, isActive) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editImageUrl').value = imageUrl;
+        document.getElementById('editLinkUrl').value = linkUrl || '';
+        document.getElementById('editDisplayOrder').value = displayOrder;
+        document.getElementById('editIsActive').checked = isActive;
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    }
+
+    function deleteCategory(id, title) {
+        if (confirm(`Bạn có chắc muốn xóa "${title}"?`)) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+</script>

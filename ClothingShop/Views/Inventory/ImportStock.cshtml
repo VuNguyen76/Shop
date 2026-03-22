@@ -1,0 +1,117 @@
+@{
+    ViewData["Title"] = "Nhập kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Nhập hàng vào kho</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/Admin/Inventory/ImportStock">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
+                        <select name="productId" id="productSelect" class="form-select" required onchange="updateProductInfo()">
+                            <option value="">-- Chọn sản phẩm --</option>
+                            @foreach (var product in ViewBag.Products)
+                            {
+                                if (ViewBag.SelectedProductId != null && ViewBag.SelectedProductId == product.Id)
+                                {
+                                    <option value="@product.Id" 
+                                            data-quantity="@product.Quantity" 
+                                            data-price="@product.Price"
+                                            selected>
+                                        @product.Name (Tồn: @product.Quantity, Giá: @product.Price.ToString("N0")₫)
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@product.Id" 
+                                            data-quantity="@product.Quantity" 
+                                            data-price="@product.Price">
+                                        @product.Name (Tồn: @product.Quantity, Giá: @product.Price.ToString("N0")₫)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    
+                    <!-- Thông tin hiện tại -->
+                    <div id="currentInfo" class="alert alert-info" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Tồn kho hiện tại:</strong> <span id="currentQuantity" class="text-primary">0</span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Giá bán hiện tại:</strong> <span id="currentPrice" class="text-danger">0₫</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Số lượng <span class="text-danger">*</span></label>
+                        <input type="number" name="quantity" class="form-control" min="1" required placeholder="Số lượng nhập thêm" />
+                        <small class="text-muted">Nhập số lượng muốn thêm vào kho</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giá nhập (₫)</label>
+                            <input type="number" name="cost" class="form-control" min="0" step="1000" placeholder="Giá mua từ nhà cung cấp" />
+                            <small class="text-muted">Giá mua vào (tùy chọn)</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giá bán (₫) <span class="text-danger">*</span></label>
+                            <input type="number" name="sellingPrice" class="form-control" min="0" step="1000" placeholder="Giá bán cho khách" required />
+                            <small class="text-muted">Giá hiển thị trên website</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea name="reason" class="form-control" rows="2" placeholder="Ghi chú về lần nhập này (tùy chọn)"></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Nhập kho
+                        </button>
+                        <a href="/Admin/Inventory" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateProductInfo() {
+            const select = document.getElementById('productSelect');
+            const option = select.options[select.selectedIndex];
+            
+            if (option.value) {
+                const quantity = option.dataset.quantity;
+                const price = option.dataset.price;
+                
+                document.getElementById('currentQuantity').textContent = quantity;
+                document.getElementById('currentPrice').textContent = parseFloat(price).toLocaleString('vi-VN') + '₫';
+                document.getElementById('currentInfo').style.display = 'block';
+            } else {
+                document.getElementById('currentInfo').style.display = 'none';
+            }
+        }
+        
+        // Tự động hiển thị nếu đã chọn sản phẩm
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProductInfo();
+        });
+    </script>
+}

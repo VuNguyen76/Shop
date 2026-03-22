@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Kết nối tới CSDL PostgreSQL trên Railway
+      - ConnectionStrings__DefaultConnection=Host=caboose.proxy.rlwy.net;Port=42713;Database=railway;Username=postgres;Password=EZGlZvlcBgskOSipZKCwjwvpoANZKwXl;SslMode=Prefer;TrustServerCertificate=True

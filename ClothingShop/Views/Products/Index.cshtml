@@ -1,0 +1,269 @@
+﻿@model IEnumerable<ClothingShop.Models.Product>
+@{
+    ViewData["Title"] = "Tất cả sản phẩm";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- SIDEBAR LỌC SIÊU ĐẸP -->
+        <div class="col-lg-3">
+            <form method="get" asp-action="Index" id="filterForm">
+                <div class="sidebar-filter sticky-top bg-white rounded-4 shadow-sm p-4" style="top: 110px; z-index: 900;">
+                    <h5 class="fw-bold mb-4 text-uppercase text-dark">Bộ lọc</h5>
+
+                    <!-- LOẠI SẢN PHẨM -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Loại sản phẩm</h6>
+                        <select name="category" class="form-select">
+                            <option value="">Tất cả</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var c in ViewBag.Categories)
+                                {
+                                    <option value="@c" selected="@(ViewBag.Category == c)">@c</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- GIỚI TÍNH -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Giới tính</h6>
+                        <select name="gender" class="form-select">
+                            <option value="">Tất cả</option>
+                            @foreach (var g in new[] { "Nam", "Nữ", "Unisex" })
+                            {
+                                <option value="@g" selected="@(ViewBag.Gender == g)">@g</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- KÍCH CỠ -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Kích cỡ</h6>
+                        <select name="size" class="form-select">
+                            <option value="">Tất cả</option>
+                            @foreach (var s in new[] { "S", "M", "L", "XL", "XXL" })
+                            {
+                                <option value="@s" selected="@(ViewBag.Size == s)">@s</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- MÀU SẮC -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Màu sắc</h6>
+                        <select name="color" class="form-select">
+                            <option value="">Tất cả</option>
+                            @foreach (var c in new[] { "Đen", "Trắng", "Xám", "Nâu", "Xanh dương", "Xanh lá", "Cam", "Vàng", "Đỏ", "Tím", "Hồng" })
+                            {
+                                <option value="@c" selected="@(ViewBag.Color == c)">@c</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- NÚT ÁP DỤNG LỌC -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark btn-lg">
+                            Áp dụng lọc
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                            Xóa bộ lọc
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- DANH SÁCH SẢN PHẨM -->
+        <div class="col-lg-9">
+            @{
+                var productRatings = ViewBag.ProductRatings as IDictionary<int, dynamic>;
+            }
+            
+            
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Tìm thấy @Model.Count() sản phẩm</h2>
+                <div class="dropdown">
+                    <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" style="min-width: 200px;">
+                        @{
+                            var sortText = ViewBag.Sort switch
+                            {
+                                "price_asc" => "Giá thấp đến cao",
+                                "price_desc" => "Giá cao đến thấp",
+                                _ => "Mới nhất"
+                            };
+                        }
+                        @sortText
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item @(ViewBag.Sort == "newest" || ViewBag.Sort == null ? "active" : "")" 
+                               href="@Url.Action("Index", new { category = ViewBag.Category, gender = ViewBag.Gender, size = ViewBag.Size, color = ViewBag.Color, search = ViewBag.Search, sort = "newest" })">
+                                Mới nhất
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item @(ViewBag.Sort == "price_asc" ? "active" : "")" 
+                               href="@Url.Action("Index", new { category = ViewBag.Category, gender = ViewBag.Gender, size = ViewBag.Size, color = ViewBag.Color, search = ViewBag.Search, sort = "price_asc" })">
+                                Giá thấp đến cao
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item @(ViewBag.Sort == "price_desc" ? "active" : "")" 
+                               href="@Url.Action("Index", new { category = ViewBag.Category, gender = ViewBag.Gender, size = ViewBag.Size, color = ViewBag.Color, search = ViewBag.Search, sort = "price_desc" })">
+                                Giá cao đến thấp
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var p in Model)
+                {
+                    <div class="col-6 col-md-4 col-lg-4">
+                        <div class="product-card bg-white rounded-4 overflow-hidden shadow hover-lift position-relative">
+                            @if (p.IsNew)
+                            {
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-3" style="z-index: 5;">NEW</span>
+                            }
+                            <!-- Nút Wishlist -->
+                            <button class="btn btn-sm position-absolute top-0 end-0 m-2 wishlist-btn" 
+                                    data-product-id="@p.Id"
+                                    style="z-index: 10; background: white; border-radius: 50%; width: 35px; height: 35px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            
+                            <a asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none">
+                                <img src="@p.ImageUrl" class="w-100" style="height:300px;object-fit:contain;background:#f8f9fa;">
+                                <div class="p-3 text-center">
+                                    <h6 class="fw-bold text-dark mb-2 line-clamp-2">@p.Name</h6>
+                                    
+                                    @if (productRatings != null && productRatings.ContainsKey(p.Id))
+                                    {
+                                        var rating = productRatings[p.Id];
+                                        double avgRating = Convert.ToDouble(rating.AverageRating);
+                                        int totalReviews = Convert.ToInt32(rating.TotalReviews);
+                                        
+                                        <div class="mb-2">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= Math.Floor(avgRating))
+                                                {
+                                                    <i class="fas fa-star text-warning small"></i>
+                                                }
+                                                else if (i - 0.5 <= avgRating)
+                                                {
+                                                    <i class="fas fa-star-half-alt text-warning small"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star text-warning small"></i>
+                                                }
+                                            }
+                                            <span class="text-muted small ms-1">(@avgRating.ToString("0.0")) - @totalReviews đánh giá</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mb-2">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="far fa-star text-muted small"></i>
+                                            }
+                                            <span class="text-muted small ms-1">(Chưa có đánh giá)</span>
+                                        </div>
+                                    }
+                                    
+                                    <p class="text-danger fw-bold fs-5 mb-0">@(p.Price.ToString("#,##0"))₫</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
+                    <h3 class="text-muted">Không tìm thấy sản phẩm nào</h3>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .color-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        transition: all 0.2s ease;
+    }
+
+    a:hover .color-circle {
+        transform: scale(1.15);
+    }
+
+    .fw-bold .color-circle {
+        outline: 3px solid #000;
+        outline-offset: 2px;
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+        }
+
+    /* Card sản phẩm có chiều cao đồng đều */
+    .product-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-card img {
+        flex-shrink: 0;
+    }
+
+    .product-card .p-3 {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Giới hạn tên sản phẩm 2 dòng với dấu ... */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.4;
+        max-height: 2.8em; /* 2 dòng x 1.4 line-height */
+        min-height: 2.8em; /* Đảm bảo chiều cao tối thiểu */
+    }
+
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .sidebar-filter {
+        border: 1px solid #eee;
+        max-height: calc(100vh - 130px);
+        overflow-y: auto;
+    }
+</style>

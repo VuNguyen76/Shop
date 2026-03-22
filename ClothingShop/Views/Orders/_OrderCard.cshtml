@@ -1,0 +1,113 @@
+@model Order
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <div class="row align-items-center">
+            <div class="col-md-3 mb-2 mb-md-0">
+                <small class="text-muted d-block">Mã đơn hàng</small>
+                <p class="mb-0 fw-bold">
+                    <i class="fas fa-hashtag me-1"></i>#@Model.Id.ToString("D6")
+                </p>
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+                <small class="text-muted d-block">Ngày đặt</small>
+                <p class="mb-0">
+                    <i class="far fa-calendar me-1"></i>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+                <small class="text-muted d-block">Tổng tiền</small>
+                <p class="mb-0 fw-bold text-danger fs-5">
+                    @Model.TotalAmount.ToString("N0")₫
+                </p>
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+                <small class="text-muted d-block">Trạng thái</small>
+                <p class="mb-0">
+                    @{
+                        var badgeClass = Model.Status switch
+                        {
+                            "Chờ xác nhận" => "bg-warning text-dark",
+                            "Chờ lấy hàng" => "bg-info",
+                            "Chờ giao hàng" => "bg-primary",
+                            "Đã giao" => "bg-success",
+                            "Đã hủy" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass px-3 py-2">
+                        <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>@Model.Status
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h6 class="mb-3 fw-bold">
+                    <i class="fas fa-box me-2"></i>Sản phẩm trong đơn:
+                </h6>
+                @foreach (var item in Model.Items.Take(3))
+                {
+                    <div class="d-flex align-items-start mb-3">
+                        @if (item.Product != null)
+                        {
+                            <img src="@item.Product.ImageUrl" alt="@item.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-light rounded me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        }
+                        <div class="flex-grow-1">
+                            <p class="mb-1 fw-bold">@item.ProductName</p>
+                            <small class="text-muted">
+                                Số lượng: <strong>@item.Quantity</strong> × 
+                                <strong class="text-danger">@item.Price.ToString("N0")₫</strong>
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 fw-bold text-danger">
+                                @((item.Quantity * item.Price).ToString("N0"))₫
+                            </p>
+                        </div>
+                    </div>
+                }
+                @if (Model.Items.Count > 3)
+                {
+                    <small class="text-muted">
+                        <i class="fas fa-ellipsis-h me-1"></i>
+                        Và <strong>@(Model.Items.Count - 3)</strong> sản phẩm khác...
+                    </small>
+                }
+            </div>
+            <div class="col-md-4">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-2"></i>Xem chi tiết
+                    </a>
+                    @if (Model.Status == "Chờ xác nhận" || Model.Status == "Chờ lấy hàng")
+                    {
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                            <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng
+                        </a>
+                    }
+                    @if (Model.Status == "Chờ giao hàng")
+                    {
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-success">
+                            <i class="fas fa-check-circle me-2"></i>Đã nhận hàng
+                        </a>
+                    }
+                    @if (Model.Status == "Đã giao")
+                    {
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-warning">
+                            <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

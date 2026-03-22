@@ -1,0 +1,254 @@
+@model List<ClothingShop.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- THÔNG BÁO -->
+@if (TempData.ContainsKey("Success"))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- THANH TÌM KIẾM VÀ BỘ LỌC -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="/Admin/Products">
+            <div class="row g-3">
+                <!-- Tìm kiếm -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.Search">
+                    </div>
+                </div>
+                
+                <!-- Lọc theo danh mục -->
+                <div class="col-md-2">
+                    <select name="category" class="form-select">
+                        <option value="">Tất cả danh mục</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var cat in ViewBag.Categories)
+                            {
+                                <option value="@cat" selected="@(ViewBag.Category == cat)">@cat</option>
+                            }
+                        }
+                    </select>
+                </div>
+                
+                <!-- Lọc theo giới tính -->
+                <div class="col-md-2">
+                    <select name="gender" class="form-select">
+                        <option value="">Tất cả giới tính</option>
+                        <option value="Nam" selected="@(ViewBag.Gender == "Nam")">Nam</option>
+                        <option value="Nữ" selected="@(ViewBag.Gender == "Nữ")">Nữ</option>
+                        <option value="Unisex" selected="@(ViewBag.Gender == "Unisex")">Unisex</option>
+                    </select>
+                </div>
+                
+                <!-- Sắp xếp -->
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="">Mới nhất</option>
+                        <option value="name_asc" selected="@(ViewBag.SortBy == "name_asc")">Tên A-Z</option>
+                        <option value="name_desc" selected="@(ViewBag.SortBy == "name_desc")">Tên Z-A</option>
+                    </select>
+                </div>
+                
+                <!-- Nút tìm kiếm -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Lọc
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- THỐNG KÊ NHANH -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Tổng sản phẩm</h6>
+                <h3 class="mb-0">@ViewBag.TotalItems</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Hiển thị</h6>
+                <h3 class="mb-0">@Model.Count / @ViewBag.TotalItems</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Trang hiện tại</h6>
+                <h3 class="mb-0">@ViewBag.CurrentPage / @ViewBag.TotalPages</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Mỗi trang</h6>
+                <h3 class="mb-0">10 sản phẩm</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BẢNG DANH SÁCH SẢN PHẨM -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Danh sách sản phẩm</h5>
+        <a href="/Admin/Products/Create" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>Thêm sản phẩm mới
+        </a>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 80px;">Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Giới tính</th>
+                            <th style="width: 150px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@product.ImageUrl" alt="@product.Name" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                </td>
+                                <td>
+                                    <strong>@product.Name</strong>
+                                    @if (product.Quantity == 0)
+                                    {
+                                        <span class="badge bg-danger ms-2">Chưa có hàng</span>
+                                    }
+                                    else if (product.Quantity <= 10)
+                                    {
+                                        <span class="badge bg-warning ms-2">Sắp hết (@product.Quantity)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success ms-2">Còn hàng (@product.Quantity)</span>
+                                    }
+                                </td>
+                                <td>@product.Category</td>
+                                <td>@product.Gender</td>
+                                <td>
+                                    <a href="/Admin/Products/Edit/@product.Id" class="btn btn-sm btn-primary" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="/Admin/Products/Delete/@product.Id" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm &quot;@product.Name&quot;?\n\nThao tác này không thể hoàn tác!')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Không tìm thấy sản phẩm nào</p>
+                <a href="/Admin/Products/Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Thêm sản phẩm đầu tiên
+                </a>
+            </div>
+        }
+    </div>
+    
+    <!-- PHÂN TRANG -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <!-- Nút Previous -->
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="/Admin/Products?search=@ViewBag.Search&category=@ViewBag.Category&gender=@ViewBag.Gender&sortBy=@ViewBag.SortBy&page=@(ViewBag.CurrentPage - 1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    @{
+                        int currentPage = ViewBag.CurrentPage;
+                        int totalPages = ViewBag.TotalPages;
+                        int startPage = Math.Max(1, currentPage - 2);
+                        int endPage = Math.Min(totalPages, currentPage + 2);
+                    }
+
+                    <!-- Trang đầu -->
+                    @if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Products", new { 
+                                search = ViewBag.Search, 
+                                category = ViewBag.Category, 
+                                gender = ViewBag.Gender, 
+                                sortBy = ViewBag.SortBy, 
+                                page = 1 
+                            })">1</a>
+                        </li>
+                        @if (startPage > 2)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                    }
+
+                    <!-- Các trang -->
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="/Admin/Products?search=@ViewBag.Search&category=@ViewBag.Category&gender=@ViewBag.Gender&sortBy=@ViewBag.SortBy&page=@i">@i</a>
+                        </li>
+                    }
+
+                    <!-- Trang cuối -->
+                    @if (endPage < totalPages)
+                    {
+                        @if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link" href="/Admin/Products?search=@ViewBag.Search&category=@ViewBag.Category&gender=@ViewBag.Gender&sortBy=@ViewBag.SortBy&page=@totalPages">@totalPages</a>
+                        </li>
+                    }
+
+                    <!-- Nút Next -->
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="/Admin/Products?search=@ViewBag.Search&category=@ViewBag.Category&gender=@ViewBag.Gender&sortBy=@ViewBag.SortBy&page=@(ViewBag.CurrentPage + 1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+

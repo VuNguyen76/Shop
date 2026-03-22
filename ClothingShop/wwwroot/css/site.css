@@ -1,0 +1,90 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix sticky header overlap issue */
+.navbar.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure content doesn't get hidden behind sticky header */
+.container, .container-fluid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Normalize image rendering for all formats (AVIF, PNG, JPG, WebP) */
+img {
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure consistent display for product images */
+.img-thumbnail {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+/* Fix AVIF transparency rendering */
+img[src$=".avif"] {
+  background-color: #fff;
+}
+
+/* Fix modal z-index to appear above sticky header */
+.modal {
+  z-index: 1055 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+/* Ensure modal content is properly positioned */
+.modal-dialog {
+  z-index: 1056;
+}
+
+/* Remove table borders for cleaner look */
+.table.border-0 td,
+.table.border-0 th {
+  border: none;
+}
+
+.table.border-0 thead th {
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Remove border-bottom from order items */
+.card-body .d-flex.align-items-start {
+  border-bottom: none !important;
+}

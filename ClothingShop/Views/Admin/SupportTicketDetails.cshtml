@@ -1,0 +1,136 @@
+@model ClothingShop.Models.SupportTicket
+@{
+    ViewData["Title"] = "Chi tiết yêu cầu hỗ trợ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-4">
+    <a href="/Admin/Support" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">@Model.Subject</h4>
+                    <small class="text-muted">Mã: #@Model.Id | Tạo lúc: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                </div>
+                <div>
+                    @if (Model.Status == "Mở")
+                    {
+                        <span class="badge bg-success fs-6">@Model.Status</span>
+                    }
+                    else if (Model.Status == "Đang xử lý")
+                    {
+                        <span class="badge bg-warning fs-6">@Model.Status</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary fs-6">@Model.Status</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Error"]</div>
+                }
+
+                @foreach (var msg in Model.Messages.OrderBy(m => m.CreatedAt))
+                {
+                    <div class="mb-3 @(msg.IsAdmin ? "text-end" : "")">
+                        <div class="d-inline-block text-start" style="max-width: 70%;">
+                            <div class="card @(msg.IsAdmin ? "bg-primary text-white" : "bg-light")">
+                                <div class="card-body p-3">
+                                    <div class="mb-1">
+                                        <strong>@(msg.IsAdmin ? "Admin" : msg.Sender?.FullName ?? "Khách hàng")</strong>
+                                        <small class="@(msg.IsAdmin ? "text-white-50" : "text-muted") ms-2">
+                                            @msg.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                    <div>@msg.Message</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Form trả lời -->
+        @if (Model.Status != "Đã đóng")
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5>Trả lời khách hàng</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/Admin/Support/Reply" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <textarea name="message" class="form-control" rows="5" required maxlength="2000"
+                                      placeholder="Nhập phản hồi của bạn..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Gửi phản hồi
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-secondary">
+                Yêu cầu này đã được đóng. Không thể gửi tin nhắn mới.
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Thông tin khách hàng -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Thông tin khách hàng</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Tên:</strong> @Model.User?.FullName</p>
+                <p><strong>Email:</strong> @Model.User?.Email</p>
+                <p><strong>SĐT:</strong> @Model.User?.PhoneNumber</p>
+                <a href="/Admin/Customers/Details/@Model.UserId" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-person"></i> Xem chi tiết
+                </a>
+            </div>
+        </div>
+
+        <!-- Cập nhật trạng thái -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Cập nhật trạng thái</h5>
+            </div>
+            <div class="card-body">
+                <form action="/Admin/Support/UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-3">
+                        <select name="status" class="form-select">
+                            <option value="Mở" selected="@(Model.Status == "Mở")">Mở</option>
+                            <option value="Đang xử lý" selected="@(Model.Status == "Đang xử lý")">Đang xử lý</option>
+                            <option value="Đã đóng" selected="@(Model.Status == "Đã đóng")">Đã đóng</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check-circle"></i> Cập nhật
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

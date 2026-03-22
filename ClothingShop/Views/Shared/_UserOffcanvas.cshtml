@@ -1,0 +1,87 @@
+@inject IHttpContextAccessor HttpContextAccessor
+@using Microsoft.EntityFrameworkCore
+
+<!-- USER OFFCANVAS -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="userOffcanvas" aria-labelledby="userOffcanvasLabel" style="width: 320px;">
+    <div class="offcanvas-header border-bottom py-3 px-3">
+        <h6 class="offcanvas-title fw-bold mb-0 text-uppercase" id="userOffcanvasLabel" style="font-size: 0.9rem; letter-spacing: 0.5px;">
+            Liên Kết Nhanh
+        </h6>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        @if (HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null)
+        {
+            <!-- ĐÃ ĐĂNG NHẬP -->
+            var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName") ?? "Người dùng";
+            var isAdmin = HttpContextAccessor.HttpContext.Session.GetString("IsAdmin") == "True";
+            
+            <div class="list-group list-group-flush">
+                <a asp-controller="Account" asp-action="Profile" class="list-group-item list-group-item-action border-0 py-3 px-3">
+                    <i class="fas fa-user me-2"></i>Tài Khoản Của Tôi
+                </a>
+                <a asp-controller="Wishlist" asp-action="Index" class="list-group-item list-group-item-action border-0 py-3 px-3">
+                    <i class="fas fa-heart me-2"></i>Danh Sách Yêu Thích
+                </a>
+                <a asp-controller="Orders" asp-action="Index" class="list-group-item list-group-item-action border-0 py-3 px-3">
+                    <i class="fas fa-shopping-bag me-2"></i>Đơn Hàng Của Tôi
+                </a>
+                @if (isAdmin)
+                {
+                    <a asp-controller="Admin" asp-action="Index" class="list-group-item list-group-item-action border-0 py-3 px-3 text-danger">
+                        <i class="fas fa-crown me-2"></i><span class="fw-bold">Quản Trị</span>
+                        <span class="badge bg-danger ms-2" style="font-size: 0.65rem;">Admin</span>
+                    </a>
+                }
+            </div>
+            
+            <div class="border-top p-3">
+                <a asp-controller="ProductHistory" asp-action="Index" class="list-group-item list-group-item-action border-0 py-3 px-3 d-flex align-items-center">
+                    <i class="fas fa-history me-2"></i>
+                    <span>Sản phẩm đã xem</span>
+                    <i class="fas fa-chevron-right ms-auto"></i>
+                </a>
+            </div>
+
+            <div class="p-3 border-top">
+                <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-dark w-100 fw-bold text-uppercase py-2" style="font-size: 0.85rem;">
+                        Đăng Xuất
+                    </button>
+                </form>
+                <div class="text-center mt-2">
+                    <small class="text-muted">Đăng nhập với: @userName</small>
+                </div>
+            </div>
+            
+            <script>
+                document.getElementById('logoutForm')?.addEventListener('submit', function(e) {
+                    // Clear localStorage và sessionStorage
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    // Clear cookies (nếu có)
+                    document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
+                });
+            </script>
+        }
+        else
+        {
+            <!-- CHƯA ĐĂNG NHẬP -->
+            <!-- ĐĂNG NHẬP/ĐĂNG KÝ Ở CUỐI -->
+            <div class="p-3 border-top">
+                <a href="@Url.Action("Login", "Account", new { returnUrl = Context.Request.Path + Context.Request.QueryString })"
+                   class="btn btn-dark w-100 fw-bold text-uppercase py-2 mb-2" style="font-size: 0.85rem;">
+                    Đăng Nhập
+                </a>
+                
+                <p class="mb-0 text-center" style="font-size: 0.8rem;">
+                    Bạn chưa có tài khoản? <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" class="text-dark fw-bold text-decoration-underline">Đăng ký tại đây</a>
+                </p>
+            </div>
+        }
+    </div>
+</div>

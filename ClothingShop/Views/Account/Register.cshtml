@@ -1,0 +1,125 @@
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="min-vh-100 bg-light d-flex align-items-center py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6">
+                <h2 class="text-center fw-bold text-uppercase mb-5">ĐĂNG KÝ TÀI KHOẢN</h2>
+
+                <!-- THÔNG BÁO -->
+                @if (TempData.ContainsKey("Success"))
+                {
+                    <div class="alert alert-success text-center small">
+                        @TempData["Success"]
+                    </div>
+                }
+                @if (TempData.ContainsKey("Error"))
+                {
+                    <div class="alert alert-danger text-center small">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                <!-- FORM ĐĂNG KÝ -->
+                <div class="bg-white p-5 rounded-4 shadow">
+                    <h3 class="text-center fw-bold mb-4">TẠO TÀI KHOẢN</h3>
+                    <form asp-action="Register" asp-controller="Account" method="post">
+                        <input type="hidden" name="ReturnUrl" value="@ViewBag.ReturnUrl" />
+                        <div class="mb-3">
+                            <input type="text" name="FullName" class="form-control form-control-lg"
+                                   placeholder="HỌ VÀ TÊN *" required autofocus />
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" name="Email" class="form-control form-control-lg"
+                                   placeholder="EMAIL *" required />
+                        </div>
+                        <div class="mb-3 position-relative">
+                            <input type="password" id="regPassword" name="Password" class="form-control form-control-lg pe-5"
+                                   placeholder="MẬT KHẨU *" required />
+                            <span class="position-absolute end-0 top-50 translate-middle-y pe-3 cursor-pointer"
+                                  onclick="togglePassword('regPassword', this)">
+                                <i class="fas fa-eye text-muted"></i>
+                            </span>
+                        </div>
+                        <div class="mb-3 position-relative">
+                            <input type="password" id="regConfirmPassword" name="ConfirmPassword" class="form-control form-control-lg pe-5"
+                                   placeholder="XÁC NHẬN MẬT KHẨU *" required />
+                            <span class="position-absolute end-0 top-50 translate-middle-y pe-3 cursor-pointer"
+                                  onclick="togglePassword('regConfirmPassword', this)">
+                                <i class="fas fa-eye text-muted"></i>
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" name="PhoneNumber" class="form-control form-control-lg"
+                                   placeholder="SỐ ĐIỆN THOẠI *" required />
+                        </div>
+                        <div class="mb-4">
+                            <div class="form-check d-inline-block me-3">
+                                <input class="form-check-input" type="radio" name="Gender" value="Nam" id="male" checked>
+                                <label class="form-check-label" for="male">Nam</label>
+                            </div>
+                            <div class="form-check d-inline-block">
+                                <input class="form-check-input" type="radio" name="Gender" value="Nữ" id="female">
+                                <label class="form-check-label" for="female">Nữ</label>
+                            </div>
+                        </div>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-dark btn-lg text-uppercase fw-bold">
+                                TẠO TÀI KHOẢN
+                            </button>
+                        </div>
+                        <div class="text-center small mb-3">
+                            Bạn đã có tài khoản?
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" class="text-dark fw-bold text-decoration-none">
+                                ĐĂNG NHẬP
+                            </a>
+                        </div>
+                        <div class="mt-4 small text-muted text-center">
+                            Bằng cách đăng ký, tôi xác nhận đã đọc và đồng ý với
+                            <a href="#" class="text-dark text-decoration-underline">Điều Khoản Sử Dụng</a> và
+                            <a href="#" class="text-dark text-decoration-underline">Chính Sách Bảo Mật</a>.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control::placeholder {
+        color: #999;
+        font-weight: 400;
+    }
+    .btn-dark {
+        border: none;
+        border-radius: 8px;
+        background-color: #000;
+    }
+        .btn-dark:hover {
+            background-color: #333;
+        }
+    .shadow {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .cursor-pointer {
+        cursor: pointer;
+        user-select: none;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Hàm chuyển đổi hiện/ẩn mật khẩu
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const isPassword = input.type === "password";
+            input.type = isPassword ? "text" : "password";
+            icon.innerHTML = isPassword
+                ? '<i class="fas fa-eye-slash text-muted"></i>'
+                : '<i class="fas fa-eye text-muted"></i>';
+        }
+    </script>
+}

@@ -1,0 +1,252 @@
+@model Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-file-invoice me-2"></i>Chi tiết đơn hàng #@Model.Id
+        </h2>
+        <a href="/Admin/Orders" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- THÔNG TIN ĐỚN HÀNG -->
+        <div class="col-lg-8">
+            <!-- TRẠNG THÁI & CẬP NHẬT -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Trạng thái đơn hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Trạng thái hiện tại:</strong></p>
+                            @{
+                                var badgeClass = Model.Status switch
+                                {
+                                    "Chờ xác nhận" => "bg-warning text-dark",
+                                    "Chờ lấy hàng" => "bg-info",
+                                    "Chờ giao hàng" => "bg-primary",
+                                    "Đã giao" => "bg-success",
+                                    "Đã hủy" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <h4><span class="badge @badgeClass">@Model.Status</span></h4>
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.Status != "Đã hủy" && Model.Status != "Đã giao")
+                            {
+                                <form action="/Admin/Orders/UpdateStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <label class="form-label fw-bold">Cập nhật trạng thái:</label>
+                                    <div class="input-group mb-2">
+                                        <select name="status" class="form-select" required>
+                                            @if (Model.Status == "Chờ xác nhận")
+                                            {
+                                                <option value="Chờ xác nhận" selected>Chờ xác nhận</option>
+                                                <option value="Chờ lấy hàng">Chờ lấy hàng</option>
+                                            }
+                                            else if (Model.Status == "Chờ lấy hàng")
+                                            {
+                                                <option value="Chờ lấy hàng" selected>Chờ lấy hàng</option>
+                                                <option value="Chờ giao hàng">Chờ giao hàng</option>
+                                            }
+                                            else if (Model.Status == "Chờ giao hàng")
+                                            {
+                                                <option value="Chờ giao hàng" selected>Chờ giao hàng</option>
+                                                <option value="Đã giao">Đã giao</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Cập nhật
+                                        </button>
+                                    </div>
+                                </form>
+                                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng
+                                </button>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Đơn hàng đã hoàn tất, không thể thay đổi trạng thái.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH SẢN PHẨM -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-box me-2"></i>Sản phẩm trong đơn hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if (item.Product != null)
+                                                {
+                                                    <img src="@item.Product.ImageUrl" alt="@item.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-image text-muted"></i>
+                                                    </div>
+                                                }
+                                                <div>
+                                                    <div class="fw-bold">@item.ProductName</div>
+                                                    <small class="text-muted">ID: @item.ProductId</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">@item.Quantity</span>
+                                        </td>
+                                        <td class="text-end">@item.Price.ToString("N0")₫</td>
+                                        <td class="text-end fw-bold text-danger">@((item.Price * item.Quantity).ToString("N0"))₫</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold fs-5">TỔNG CỘNG:</td>
+                                    <td class="text-end fw-bold fs-5 text-danger">@Model.TotalAmount.ToString("N0")₫</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THÔNG TIN KHÁCH HÀNG -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Thông tin khách hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Họ tên:</label>
+                        <p class="fw-bold mb-0">@Model.User.FullName</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Email:</label>
+                        <p class="mb-0">@Model.User.Email</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Số điện thoại:</label>
+                        <p class="mb-0">@Model.User.PhoneNumber</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Giới tính:</label>
+                        <p class="mb-0">@Model.User.Gender</p>
+                    </div>
+                    <div>
+                        <label class="text-muted small">Ngày tạo tài khoản:</label>
+                        <p class="mb-0">@Model.User.CreatedAt.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Thông tin đơn hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Mã đơn hàng:</label>
+                        <p class="fw-bold mb-0">#@Model.Id</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Ngày đặt hàng:</label>
+                        <p class="mb-0">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Tổng số sản phẩm:</label>
+                        <p class="mb-0">@Model.Items.Sum(i => i.Quantity) sản phẩm</p>
+                    </div>
+                    <div>
+                        <label class="text-muted small">Tổng giá trị:</label>
+                        <p class="fw-bold text-danger fs-5 mb-0">@Model.TotalAmount.ToString("N0")₫</p>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.CancelReason))
+                    {
+                        <hr>
+                        <div class="alert alert-danger mb-0">
+                            <strong><i class="fas fa-exclamation-circle me-2"></i>Lý do hủy:</strong>
+                            <p class="mb-1">@Model.CancelReason</p>
+                            <small class="text-muted">
+                                Hủy bởi: @Model.CancelledBy | 
+                                @Model.CancelledAt?.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Hủy Đơn Hàng -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Admin/Orders/Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Hủy đơn hàng #@Model.Id</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lý do hủy đơn <span class="text-danger">*</span></label>
+                        <textarea name="cancelReason" class="form-control" rows="4" required 
+                                  placeholder="VD: Khách yêu cầu hủy, Sản phẩm hết hàng, Địa chỉ giao hàng không hợp lệ..."></textarea>
+                        <small class="text-muted">Lý do này sẽ được gửi cho khách hàng</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-2"></i>Xác nhận hủy đơn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

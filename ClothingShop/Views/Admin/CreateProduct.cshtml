@@ -1,0 +1,317 @@
+@model ClothingShop.Models.Product
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Thêm sản phẩm mới</h5>
+            </div>
+            <div class="card-body">
+                <form action="/Admin/Products/Create" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <!-- Tên sản phẩm -->
+                        <div class="col-md-12">
+                            <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm" required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="col-md-12">
+                            <label class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả sản phẩm"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Danh mục -->
+                        <div class="col-md-6">
+                            <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select asp-for="Category" class="form-select" required>
+                                    <option value="">-- Chọn danh mục --</option>
+                                    @if (ViewBag.Categories != null)
+                                    {
+                                        foreach (var cat in ViewBag.Categories)
+                                        {
+                                            <option value="@cat.Name">@cat.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <a href="/Admin/Categories/Product" class="btn btn-outline-secondary" title="Quản lý danh mục">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                            </div>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                            @if (ViewBag.Categories == null || ViewBag.Categories.Count == 0)
+                            {
+                                <small class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Chưa có danh mục. <a href="/Admin/Categories/Product">Tạo danh mục mới</a>
+                                </small>
+                            }
+                        </div>
+
+                        <!-- Giới tính -->
+                        <div class="col-md-6">
+                            <label class="form-label">Giới tính <span class="text-danger">*</span></label>
+                            <select asp-for="Gender" class="form-select" required>
+                                <option value="">-- Chọn giới tính --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Unisex">Unisex</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+
+                        <!-- Size -->
+                        <div class="col-md-12" id="sizeSection">
+                            <label class="form-label">Size <span class="text-danger">*</span></label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="S" id="sizeS">
+                                    <label class="form-check-label" for="sizeS">S</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="M" id="sizeM">
+                                    <label class="form-check-label" for="sizeM">M</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="L" id="sizeL">
+                                    <label class="form-check-label" for="sizeL">L</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="XL" id="sizeXL">
+                                    <label class="form-check-label" for="sizeXL">XL</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="XXL" id="sizeXXL">
+                                    <label class="form-check-label" for="sizeXXL">XXL</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="XXXL" id="sizeXXXL">
+                                    <label class="form-check-label" for="sizeXXXL">XXXL</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="Freesize" id="sizeFreesize">
+                                    <label class="form-check-label" for="sizeFreesize">Freesize</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="Không có size" id="sizeNone">
+                                    <label class="form-check-label" for="sizeNone">Không có size</label>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Size" id="sizeHidden" required />
+                            <small class="text-muted">Chọn "Không có size" cho phụ kiện, nón, balo...</small>
+                        </div>
+
+                        <!-- Màu sắc -->
+                        <div class="col-md-12">
+                            <label class="form-label">Màu sắc <span class="text-danger">*</span></label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Đen" id="colorBlack">
+                                    <label class="form-check-label" for="colorBlack">Đen</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Trắng" id="colorWhite">
+                                    <label class="form-check-label" for="colorWhite">Trắng</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Xám" id="colorGray">
+                                    <label class="form-check-label" for="colorGray">Xám</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Đỏ" id="colorRed">
+                                    <label class="form-check-label" for="colorRed">Đỏ</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Xanh dương" id="colorBlue">
+                                    <label class="form-check-label" for="colorBlue">Xanh dương</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Xanh lá" id="colorGreen">
+                                    <label class="form-check-label" for="colorGreen">Xanh lá</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Vàng" id="colorYellow">
+                                    <label class="form-check-label" for="colorYellow">Vàng</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Hồng" id="colorPink">
+                                    <label class="form-check-label" for="colorPink">Hồng</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="Nâu" id="colorBrown">
+                                    <label class="form-check-label" for="colorBrown">Nâu</label>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Color" id="colorHidden" required />
+                            <small class="text-muted">Chọn ít nhất một màu</small>
+                        </div>
+
+                        <!-- Thông báo -->
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong> Sau khi tạo sản phẩm, vui lòng vào <strong>"Quản lý Kho hàng → Nhập kho"</strong> để nhập hàng và thiết lập giá bán.
+                            </div>
+                        </div>
+
+                        <!-- Ảnh chính -->
+                        <div class="col-md-12">
+                            <label class="form-label">Ảnh chính <span class="text-danger">*</span></label>
+                            <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewMainImage(event)" required />
+                            <small class="text-muted">Ảnh này sẽ hiển thị làm ảnh đại diện sản phẩm</small>
+                            <div id="mainImagePreview" class="mt-3" style="display: none;">
+                                <img id="mainPreview" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                            </div>
+                        </div>
+
+                        <!-- Ảnh phụ -->
+                        <div class="col-md-12">
+                            <label class="form-label">Ảnh phụ (tối đa 5 ảnh)</label>
+                            <input type="file" name="additionalImages" class="form-control" accept="image/*" multiple onchange="previewAdditionalImages(event)" />
+                            <small class="text-muted">Chọn nhiều ảnh để hiển thị chi tiết sản phẩm</small>
+                            <div id="additionalImagesPreview" class="mt-3 row g-2"></div>
+                        </div>
+
+                        <!-- Nút submit -->
+                        <div class="col-md-12">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a asp-action="Products" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i>Lưu sản phẩm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewMainImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('mainPreview').src = e.target.result;
+                    document.getElementById('mainImagePreview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewAdditionalImages(event) {
+            const files = event.target.files;
+            const previewContainer = document.getElementById('additionalImagesPreview');
+            previewContainer.innerHTML = '';
+
+            if (files.length > 5) {
+                alert('Chỉ được chọn tối đa 5 ảnh phụ!');
+                event.target.value = '';
+                return;
+            }
+
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-2';
+                    col.innerHTML = `
+                        <div class="position-relative">
+                            <img src="${e.target.result}" class="img-thumbnail" style="width: 100%; height: 150px; object-fit: cover;">
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-1">${index + 1}</span>
+                        </div>
+                    `;
+                    previewContainer.appendChild(col);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Xử lý checkbox size và màu
+        function updateHiddenFields() {
+            // Size
+            const sizeCheckboxes = document.querySelectorAll('input[name="sizes"]:checked');
+            const sizes = Array.from(sizeCheckboxes).map(cb => cb.value);
+            document.getElementById('sizeHidden').value = JSON.stringify(sizes);
+
+            // Color
+            const colorCheckboxes = document.querySelectorAll('input[name="colors"]:checked');
+            const colors = Array.from(colorCheckboxes).map(cb => cb.value);
+            document.getElementById('colorHidden').value = JSON.stringify(colors);
+        }
+
+        // Gắn sự kiện cho tất cả checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const allCheckboxes = document.querySelectorAll('input[name="sizes"], input[name="colors"]');
+            allCheckboxes.forEach(cb => {
+                cb.addEventListener('change', updateHiddenFields);
+            });
+
+            // Tự động check "Không có size" khi chọn danh mục phụ kiện
+            const categorySelect = document.querySelector('select[name="Category"]');
+            const sizeNoneCheckbox = document.getElementById('sizeNone');
+            const noSizeCategories = ['Phụ kiện', 'Nón', 'Balo', 'Túi xách', 'Ví', 'Thắt lưng', 'Mắt kính'];
+
+            if (categorySelect && sizeNoneCheckbox) {
+                categorySelect.addEventListener('change', function() {
+                    const category = this.value;
+                    if (noSizeCategories.some(cat => category.includes(cat))) {
+                        // Bỏ check tất cả size khác
+                        document.querySelectorAll('input[name="sizes"]').forEach(cb => {
+                            if (cb.id !== 'sizeNone') cb.checked = false;
+                        });
+                        // Check "Không có size"
+                        sizeNoneCheckbox.checked = true;
+                        updateHiddenFields();
+                    }
+                });
+            }
+
+            // Khi check "Không có size", bỏ check các size khác
+            if (sizeNoneCheckbox) {
+                sizeNoneCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.querySelectorAll('input[name="sizes"]').forEach(cb => {
+                            if (cb.id !== 'sizeNone') cb.checked = false;
+                        });
+                        updateHiddenFields();
+                    }
+                });
+            }
+
+            // Validate khi submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const sizeChecked = document.querySelectorAll('input[name="sizes"]:checked').length;
+                const colorChecked = document.querySelectorAll('input[name="colors"]:checked').length;
+
+                if (sizeChecked === 0) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ít nhất một size!');
+                    return false;
+                }
+
+                if (colorChecked === 0) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ít nhất một màu!');
+                    return false;
+                }
+
+                updateHiddenFields();
+            });
+        });
+    </script>
+}

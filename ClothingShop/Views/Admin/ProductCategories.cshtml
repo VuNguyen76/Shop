@@ -1,0 +1,185 @@
+@model List<ClothingShop.Models.ProductCategory>
+@{
+    ViewData["Title"] = "Quản lý danh mục sản phẩm";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Thêm danh mục mới</h5>
+            </div>
+            <div class="card-body">
+                <form action="/Admin/Categories/Product/Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                        <input type="text" name="Name" class="form-control" required placeholder="VD: Áo thun, Quần jean...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea name="Description" class="form-control" rows="3" placeholder="Mô tả về danh mục này..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thứ tự hiển thị</label>
+                        <input type="number" name="DisplayOrder" class="form-control" value="0" min="0">
+                        <small class="text-muted">Để 0 để tự động gán số tiếp theo. Hoặc nhập số thủ công (không được trùng).</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="IsActive" class="form-check-input" checked value="true">
+                            <label class="form-check-label">Kích hoạt</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Thêm danh mục
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Danh sách danh mục (@Model.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-folder-open fa-3x mb-3"></i>
+                        <p>Chưa có danh mục nào. Hãy thêm danh mục đầu tiên!</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên danh mục</th>
+                                    <th>Mô tả</th>
+                                    <th>Thứ tự</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var category in Model)
+                                {
+                                    <tr>
+                                        <td>@category.DisplayOrder</td>
+                                        <td><strong>@category.Name</strong></td>
+                                        <td>@(category.Description ?? "-")</td>
+                                        <td>@category.DisplayOrder</td>
+                                        <td>
+                                            @if (category.IsActive)
+                                            {
+                                                <span class="badge bg-success">Kích hoạt</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Tắt</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal@(category.Id)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal@(category.Id)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Modal Sửa -->
+                                    <div class="modal fade" id="editModal@(category.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form asp-action="UpdateProductCategory" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="Id" value="@category.Id">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Sửa danh mục</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Tên danh mục</label>
+                                                            <input type="text" name="Name" class="form-control" value="@category.Name" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Mô tả</label>
+                                                            <textarea name="Description" class="form-control" rows="3">@category.Description</textarea>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Thứ tự hiển thị</label>
+                                                            <input type="number" name="DisplayOrder" class="form-control" value="@category.DisplayOrder">
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <div class="form-check">
+                                                                <input type="checkbox" name="IsActive" class="form-check-input" checked="@category.IsActive" value="true">
+                                                                <label class="form-check-label">Kích hoạt</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal Xóa -->
+                                    <div class="modal fade" id="deleteModal@(category.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form asp-action="DeleteProductCategory" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@category.Id">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Xác nhận xóa</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Bạn có chắc muốn xóa danh mục <strong>@category.Name</strong>?</p>
+                                                        <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Lưu ý: Không thể xóa nếu có sản phẩm đang sử dụng danh mục này.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                        <button type="submit" class="btn btn-danger">Xóa</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

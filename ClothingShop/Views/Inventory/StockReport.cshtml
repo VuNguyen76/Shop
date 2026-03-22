@@ -1,0 +1,88 @@
+@model List<ClothingShop.Models.Product>
+@{
+    ViewData["Title"] = "Báo cáo Tồn kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Tổng sản phẩm</h6>
+                <h2>@ViewBag.TotalProducts</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Tổng tồn kho</h6>
+                <h2>@ViewBag.TotalStock</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6>Giá trị tồn</h6>
+                <h2>@ViewBag.TotalValue.ToString("N0")₫</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>Hết hàng</h6>
+                <h2>@ViewBag.OutOfStock</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Danh sách tồn kho</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th class="text-end">Giá</th>
+                        <th class="text-end">Tồn kho</th>
+                        <th class="text-end">Giá trị</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        <tr>
+                            <td>@product.Name</td>
+                            <td>@product.Category</td>
+                            <td class="text-end">@product.Price.ToString("N0")₫</td>
+                            <td class="text-end"><strong>@product.Quantity</strong></td>
+                            <td class="text-end">@((product.Price * product.Quantity).ToString("N0"))₫</td>
+                            <td>
+                                @if (product.Quantity == 0)
+                                {
+                                    <span class="badge bg-danger">Hết hàng</span>
+                                }
+                                else if (product.Quantity <= 10)
+                                {
+                                    <span class="badge bg-warning">Sắp hết</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Còn hàng</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,131 @@
+# ========================================
+# ASP.NET Core / Visual Studio / Rider
+# ========================================
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rchive/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Visual Studio cache files
+# .vs/ folder
+.vs/
+*.vspscc
+*.vssscc
+*.vsp
+*.vspx
+*.sap
+
+## Rider
+.idea/
+*.iml
+*.iws
+*.ipr
+
+## dotnet
+*.dotnet
+*.nupkg
+*.snupkg
+*.symbols
+*.lock.json
+*.lock
+*.tmp
+*.cache
+*.pdb
+*.dll
+*.exe
+*.binlog
+
+## NuGet
+*.nuget
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+## Entity Framework
+*.dbmdl
+*.edmx
+*.mdf
+*.ldf
+
+## Migration backup
+*.bak
+*.mdf
+*.ldf
+
+## Secrets
+appsettings.*.json
+secrets.json
+
+## Local Environment
+.env
+.env.local
+.env.*.local
+
+## Testing
+[TestResults]/
+*.trx
+
+## Coverage
+*.coverage
+*.coveragexml
+*.cobertura.xml
+
+## Docker
+Dockerfile.*
+.dockerignore
+
+## OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ========================================
+# wwwroot – Chỉ bỏ file build, giữ file tĩnh
+# ========================================
+wwwroot/lib/
+wwwroot/css/site.min.css
+wwwroot/js/site.min.js
+wwwroot/*.map
+
+# Giữ lại: hình ảnh, css/js tự viết
+!wwwroot/css/site.css
+!wwwroot/js/site.js
+!wwwroot/images/
+!wwwroot/favicon.ico
+
+# ========================================
+# Logs & Temp
+# ========================================
+*.log
+temp/
+tmp/
+
+# ========================================
+# End of file
+# ========================================
+.fake

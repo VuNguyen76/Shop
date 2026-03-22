@@ -1,0 +1,474 @@
+@{
+    ViewData["Title"] = "Thanh toán";
+    var cartItems = ViewBag.CartItems as List<ClothingShop.Models.CartItem>;
+    var totalPrice = (decimal)ViewBag.TotalPrice;
+    var user = ViewBag.User as ClothingShop.Models.User;
+    var paymentInfo = ViewBag.PaymentInfo as ClothingShop.Models.PaymentInfo;
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-4 fw-bold">
+        <i class="fas fa-credit-card me-2"></i>THANH TOÁN
+    </h2>
+
+    <div class="row g-4">
+        <!-- FORM THÔNG TIN -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-user-circle me-2"></i>Thông tin người nhận
+                    </h5>
+
+                    <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" class="form-control" value="@user?.FullName" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" name="phoneNumber" class="form-control" value="@user?.PhoneNumber" required />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                <select id="provinceSelect" class="form-select" required>
+                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Quận/Huyện <span class="text-danger">*</span></label>
+                                <select id="districtSelect" class="form-select" required disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Phường/Xã <span class="text-danger">*</span></label>
+                                <select id="wardSelect" class="form-select" required disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                            <input type="text" id="addressDetail" class="form-control" placeholder="Số nhà, tên đường..." required />
+                        </div>
+
+                        <input type="hidden" name="address" id="fullAddress" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú cho người bán (tùy chọn)"></textarea>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">
+                            <i class="fas fa-wallet me-2"></i>Phương thức thanh toán
+                        </h5>
+
+                        <div class="form-check mb-3 p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked>
+                            <label class="form-check-label w-100" for="cod">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                        <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-2">Thanh toán bằng tiền mặt khi nhận hàng</small>
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-4 p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="VNPay">
+                            <label class="form-check-label w-100" for="vnpay">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-credit-card text-danger me-2"></i>
+                                        <strong>Thanh toán online qua VNPay</strong>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-2">Hỗ trợ: ATM nội địa, Visa, MasterCard, JCB, QR Code</small>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ĐƠN HÀNG -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của bạn
+                    </h5>
+
+                    <div class="order-items mb-3" style="max-height: 300px; overflow-y: auto;">
+                        @if (cartItems != null)
+                        {
+                            foreach (var item in cartItems)
+                            {
+                                <div class="d-flex mb-3 pb-3 border-bottom">
+                                    <img src="@(item.ImageUrl ?? "")" alt="@item.Name" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                    <div class="ms-3 flex-grow-1">
+                                        <h6 class="mb-1 small">@item.Name</h6>
+                                        <p class="text-muted small mb-0">SL: @item.Quantity</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="fw-bold mb-0">@((item.Price * item.Quantity).ToString("N0"))₫</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <hr>
+
+                    <!-- MÃ GIẢM GIÁ -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-ticket-alt me-2 text-success"></i>Mã giảm giá
+                        </label>
+                        <div class="input-group">
+                            <input type="text" id="couponCode" class="form-control" placeholder="Nhập mã giảm giá" style="text-transform: uppercase;">
+                            <button type="button" class="btn btn-outline-success" onclick="applyCoupon()">
+                                <i class="fas fa-check me-1"></i>Áp dụng
+                            </button>
+                        </div>
+                        <div id="couponMessage" class="mt-2"></div>
+                        <input type="hidden" id="appliedCouponCode" name="couponCode" form="checkoutForm" />
+                        <input type="hidden" id="discountAmount" value="0" />
+                    </div>
+
+                    <hr>
+
+                    @{
+                        decimal shippingFee = totalPrice < 500000 ? 20000 : 0;
+                        decimal discountAmount = 0; // Sẽ được cập nhật bởi JavaScript
+                        decimal finalTotal = totalPrice + shippingFee - discountAmount;
+                    }
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span class="fw-bold" id="subtotalDisplay">@totalPrice.ToString("N0")₫</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none !important;">
+                        <span class="text-success">
+                            <i class="fas fa-tag me-1"></i>Giảm giá:
+                        </span>
+                        <span class="text-success fw-bold" id="discountDisplay">-0₫</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển:</span>
+                        <span id="shippingFeeDisplay" class="text-danger">@shippingFee.ToString("N0")₫</span>
+                    </div>
+
+                    <div id="freeShipAlert" class="alert alert-info small py-2 mb-2" style="display: @(totalPrice < 500000 ? "block" : "none")">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span id="freeShipMessage">Mua thêm @((500000 - totalPrice).ToString("N0"))₫ để được miễn phí vận chuyển!</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="mb-0">Tổng cộng:</h5>
+                        <h5 class="text-danger mb-0" id="finalTotalDisplay">@finalTotal.ToString("N0")₫</h5>
+                    </div>
+
+                    <button type="submit" form="checkoutForm" class="btn btn-danger btn-lg w-100 py-3">
+                        <i class="fas fa-check-circle me-2"></i>ĐẶT HÀNG
+                    </button>
+
+                    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại giỏ hàng
+                    </a>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="small fw-bold mb-2">
+                            <i class="fas fa-shield-alt text-success me-2"></i>Cam kết của chúng tôi
+                        </h6>
+                        <ul class="small text-muted mb-0 ps-3">
+                            <li>Giao hàng nhanh chóng</li>
+                            <li>Đổi trả trong 7 ngày</li>
+                            <li>Bảo mật thông tin</li>
+                            <li>Hỗ trợ 24/7</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    // API Tỉnh/Thành Việt Nam
+    const API_BASE = 'https://provinces.open-api.vn/api';
+    
+    let provinces = [];
+    let districts = [];
+    let wards = [];
+
+    // Load danh sách tỉnh/thành
+    async function loadProvinces() {
+        try {
+            const response = await fetch(`${API_BASE}/p/`);
+            provinces = await response.json();
+            
+            const provinceSelect = document.getElementById('provinceSelect');
+            provinces.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province.code;
+                option.textContent = province.name;
+                provinceSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách tỉnh/thành:', error);
+        }
+    }
+
+    // Load danh sách quận/huyện
+    async function loadDistricts(provinceCode) {
+        try {
+            const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+            const data = await response.json();
+            districts = data.districts;
+            
+            const districtSelect = document.getElementById('districtSelect');
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            districtSelect.disabled = false;
+            
+            districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.code;
+                option.textContent = district.name;
+                districtSelect.appendChild(option);
+            });
+            
+            // Reset ward
+            document.getElementById('wardSelect').innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            document.getElementById('wardSelect').disabled = true;
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách quận/huyện:', error);
+        }
+    }
+
+    // Load danh sách phường/xã
+    async function loadWards(districtCode) {
+        try {
+            const response = await fetch(`${API_BASE}/d/${districtCode}?depth=2`);
+            const data = await response.json();
+            wards = data.wards;
+            
+            const wardSelect = document.getElementById('wardSelect');
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSelect.disabled = false;
+            
+            wards.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward.code;
+                option.textContent = ward.name;
+                wardSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách phường/xã:', error);
+        }
+    }
+
+    // Cập nhật địa chỉ đầy đủ
+    function updateFullAddress() {
+        const addressDetail = document.getElementById('addressDetail').value.trim();
+        const wardSelect = document.getElementById('wardSelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const provinceSelect = document.getElementById('provinceSelect');
+        
+        const wardText = wardSelect.options[wardSelect.selectedIndex]?.text || '';
+        const districtText = districtSelect.options[districtSelect.selectedIndex]?.text || '';
+        const provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+        
+        let fullAddress = '';
+        if (addressDetail) fullAddress += addressDetail;
+        if (wardText && wardText !== '-- Chọn Phường/Xã --') fullAddress += (fullAddress ? ', ' : '') + wardText;
+        if (districtText && districtText !== '-- Chọn Quận/Huyện --') fullAddress += (fullAddress ? ', ' : '') + districtText;
+        if (provinceText && provinceText !== '-- Chọn Tỉnh/Thành --') fullAddress += (fullAddress ? ', ' : '') + provinceText;
+        
+        document.getElementById('fullAddress').value = fullAddress;
+    }
+
+    // Event listeners
+    document.getElementById('provinceSelect').addEventListener('change', function() {
+        if (this.value) {
+            loadDistricts(this.value);
+        } else {
+            document.getElementById('districtSelect').innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            document.getElementById('districtSelect').disabled = true;
+            document.getElementById('wardSelect').innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            document.getElementById('wardSelect').disabled = true;
+        }
+        updateFullAddress();
+    });
+
+    document.getElementById('districtSelect').addEventListener('change', function() {
+        if (this.value) {
+            loadWards(this.value);
+        } else {
+            document.getElementById('wardSelect').innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            document.getElementById('wardSelect').disabled = true;
+        }
+        updateFullAddress();
+    });
+
+    document.getElementById('wardSelect').addEventListener('change', updateFullAddress);
+    document.getElementById('addressDetail').addEventListener('input', updateFullAddress);
+
+    // Load provinces khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProvinces();
+    });
+
+    // ===== MÃ GIẢM GIÁ =====
+    let currentDiscount = 0;
+    const subtotal = @totalPrice;
+    
+    async function applyCoupon() {
+        const couponCode = document.getElementById('couponCode').value.trim().toUpperCase();
+        const messageDiv = document.getElementById('couponMessage');
+        
+        if (!couponCode) {
+            showCouponMessage('Vui lòng nhập mã giảm giá', 'warning');
+            return;
+        }
+        
+        // Hiển thị loading
+        messageDiv.innerHTML = '<small class="text-muted"><i class="fas fa-spinner fa-spin me-1"></i>Đang kiểm tra...</small>';
+        
+        try {
+            // TODO: Gọi API validate mã giảm giá
+            // Tạm thời giả lập
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Giả lập response (sẽ thay bằng API thật)
+            const mockResponse = {
+                isValid: couponCode === 'SUMMER20' || couponCode === 'FREESHIP',
+                discount: couponCode === 'SUMMER20' ? subtotal * 0.2 : 30000,
+                message: couponCode === 'SUMMER20' ? 'Giảm 20% đơn hàng' : 'Giảm 30,000₫ phí ship'
+            };
+            
+            if (mockResponse.isValid) {
+                currentDiscount = mockResponse.discount;
+                document.getElementById('appliedCouponCode').value = couponCode;
+                document.getElementById('discountAmount').value = currentDiscount;
+                
+                // Hiển thị giảm giá
+                document.getElementById('discountRow').style.display = 'flex';
+                document.getElementById('discountDisplay').textContent = '-' + currentDiscount.toLocaleString('vi-VN') + '₫';
+                
+                // Cập nhật tổng tiền
+                updateTotal();
+                
+                // Hiển thị thông báo thành công
+                showCouponMessage('✓ ' + mockResponse.message, 'success');
+                
+                // Disable input
+                document.getElementById('couponCode').disabled = true;
+                
+                // Đổi nút thành "Hủy"
+                const btn = event.target;
+                btn.innerHTML = '<i class="fas fa-times me-1"></i>Hủy';
+                btn.className = 'btn btn-outline-danger';
+                btn.onclick = removeCoupon;
+            } else {
+                showCouponMessage('Mã không hợp lệ hoặc đã hết hạn', 'danger');
+            }
+        } catch (error) {
+            showCouponMessage('Có lỗi xảy ra, vui lòng thử lại', 'danger');
+        }
+    }
+    
+    function removeCoupon() {
+        currentDiscount = 0;
+        document.getElementById('appliedCouponCode').value = '';
+        document.getElementById('discountAmount').value = '0';
+        document.getElementById('couponCode').value = '';
+        document.getElementById('couponCode').disabled = false;
+        
+        // Ẩn dòng giảm giá
+        document.getElementById('discountRow').style.display = 'none';
+        
+        // Cập nhật tổng tiền
+        updateTotal();
+        
+        // Đổi nút về "Áp dụng"
+        const btn = event.target;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Áp dụng';
+        btn.className = 'btn btn-outline-success';
+        btn.onclick = applyCoupon;
+        
+        // Xóa thông báo
+        document.getElementById('couponMessage').innerHTML = '';
+    }
+    
+    function showCouponMessage(message, type) {
+        const messageDiv = document.getElementById('couponMessage');
+        const alertClass = type === 'success' ? 'alert-success' : type === 'danger' ? 'alert-danger' : 'alert-warning';
+        messageDiv.innerHTML = `<div class="alert ${alertClass} small py-2 mb-0 mt-2">${message}</div>`;
+    }
+    
+    function updateTotal() {
+        const shippingFee = subtotal < 500000 ? 20000 : 0;
+        const finalTotal = subtotal + shippingFee - currentDiscount;
+        
+        document.getElementById('finalTotalDisplay').textContent = finalTotal.toLocaleString('vi-VN') + '₫';
+        
+        // Cập nhật thông báo freeship nếu có
+        if (subtotal < 500000) {
+            const remaining = 500000 - subtotal;
+            document.getElementById('freeShipMessage').textContent = 
+                `Mua thêm ${remaining.toLocaleString('vi-VN')}₫ để được miễn phí vận chuyển!`;
+        }
+    }
+
+    // Form validation
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        const fullName = document.querySelector('input[name="fullName"]').value.trim();
+        const phoneNumber = document.querySelector('input[name="phoneNumber"]').value.trim();
+        const provinceSelect = document.getElementById('provinceSelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const wardSelect = document.getElementById('wardSelect');
+        const addressDetail = document.getElementById('addressDetail').value.trim();
+
+        if (!fullName || !phoneNumber || !provinceSelect.value || !districtSelect.value || !wardSelect.value || !addressDetail) {
+            e.preventDefault();
+            alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+            return false;
+        }
+
+        // Validate phone number
+        const phoneRegex = /^[0-9]{10,11}$/;
+        if (!phoneRegex.test(phoneNumber)) {
+            e.preventDefault();
+            alert('Số điện thoại không hợp lệ');
+            return false;
+        }
+
+        // Update full address before submit
+        updateFullAddress();
+
+        // Confirm dialog - nếu user nhấn Cancel thì ngăn submit
+        if (!confirm('Xác nhận đặt hàng?')) {
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+</script>

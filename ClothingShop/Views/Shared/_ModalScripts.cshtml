@@ -1,0 +1,17 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Khi modal bị đóng hoàn toàn
+        document.querySelectorAll('.modal').forEach(function (modal) {
+            modal.addEventListener('hidden.bs.modal', function () {
+
+                // Xóa tất cả backdrop thừa (nếu có)
+                document.querySelectorAll('.modal-backdrop.show').forEach(b => b.remove());
+
+                // Bootstrap sẽ tự xử lý modal-open, nên KHÔNG sửa class body
+
+            });
+        });
+
+    });
+</script>

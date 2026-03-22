@@ -1,0 +1,201 @@
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ClothingShop.Services.ICartService CartService
+@{
+    var cartCount = 0;
+    if (HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null)
+    {
+        cartCount = CartService.GetTotalItems();
+    }
+}
+
+<!-- CART OFFCANVAS -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 400px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="cartOffcanvasLabel">
+            <i class="fas fa-shopping-cart me-2"></i>Giỏ Hàng Của Tôi (<span id="cartItemCount">@cartCount</span>)
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+        <div id="cartItemsContainer" class="flex-grow-1 overflow-auto p-3">
+            <!-- Cart items will be loaded here via AJAX -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="border-top p-3 bg-light" id="cartFooter">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="fw-bold">Tổng cộng:</span>
+                <span class="fw-bold text-danger fs-5" id="cartTotal">0₫</span>
+            </div>
+            <a asp-controller="Orders" asp-action="Checkout" class="btn btn-dark w-100 fw-bold text-uppercase mb-2">
+                <i class="fas fa-credit-card me-2"></i>Thanh toán
+            </a>
+            <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-dark w-100 text-uppercase">
+                Xem giỏ hàng
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load cart when offcanvas is shown
+    document.getElementById('cartOffcanvas').addEventListener('show.bs.offcanvas', function () {
+        loadCartItems();
+    });
+
+    function loadCartItems() {
+        // Check if user is logged in
+        const isLoggedIn = @(HttpContextAccessor.HttpContext?.Session.GetString("UserId") != null ? "true" : "false");
+        
+        const container = document.getElementById('cartItemsContainer');
+        const footer = document.getElementById('cartFooter');
+        const totalElement = document.getElementById('cartTotal');
+        const countElement = document.getElementById('cartItemCount');
+        
+        if (!isLoggedIn) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart text-muted mb-3" style="font-size: 4rem;"></i>
+                    <p class="mb-2"><strong>Giỏ hàng trống</strong></p>
+                    <p class="text-muted small">Vui lòng đăng nhập để xem Giỏ hàng đã lưu của bạn.</p>
+                </div>
+            `;
+            footer.style.display = 'none';
+            countElement.textContent = '0';
+            return;
+        }
+        
+        fetch('/Cart/GetCartItems')
+            .then(response => response.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    // Tính tổng số lượng sản phẩm (không phải số loại)
+                    const totalQuantity = data.items.reduce((sum, item) => sum + item.quantity, 0);
+                    
+                    let html = '';
+                    data.items.forEach(item => {
+                        const sizeDisplay = item.size || 'N/A';
+                        const colorDisplay = item.color || 'N/A';
+                        const sizeValue = item.size || null;
+                        const colorValue = item.color || null;
+                        
+                        html += `
+                            <div class="d-flex mb-3 pb-3 border-bottom">
+                                <img src="${item.imageUrl}" alt="${item.name}" class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                                <div class="ms-3 flex-grow-1">
+                                    <h6 class="mb-1">${item.name}</h6>
+                                    <p class="text-muted small mb-1">Màu: ${colorDisplay} | Size: ${sizeDisplay}</p>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="input-group" style="width: 100px;">
+                                            <button class="btn btn-sm btn-outline-secondary" onclick='updateCartQuantity(${item.productId}, ${item.quantity - 1}, ${JSON.stringify(sizeValue)}, ${JSON.stringify(colorValue)})'>-</button>
+                                            <input type="text" class="form-control form-control-sm text-center" value="${item.quantity}" readonly>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick='updateCartQuantity(${item.productId}, ${item.quantity + 1}, ${JSON.stringify(sizeValue)}, ${JSON.stringify(colorValue)})'>+</button>
+                                        </div>
+                                        <span class="fw-bold text-danger">${item.price.toLocaleString()}₫</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-link text-danger" onclick='removeFromCart(${item.productId}, ${JSON.stringify(sizeValue)}, ${JSON.stringify(colorValue)})'>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                    totalElement.textContent = data.total.toLocaleString() + '₫';
+                    countElement.textContent = totalQuantity;
+                    footer.style.display = 'block';
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart text-muted mb-3" style="font-size: 4rem;"></i>
+                            <p class="mb-0"><strong>Giỏ hàng trống</strong></p>
+                        </div>
+                    `;
+                    footer.style.display = 'none';
+                    countElement.textContent = '0';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading cart:', error);
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <p class="text-danger">Không thể tải giỏ hàng</p>
+                    </div>
+                `;
+                footer.style.display = 'none';
+            });
+    }
+
+    function updateCartQuantity(productId, quantity, size, color) {
+        if (quantity < 1) return;
+        fetch('/Cart/UpdateQuantity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                productId: productId, 
+                quantity: quantity,
+                size: size,
+                color: color
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadCartItems();
+                updateCartBadge();
+            }
+        });
+    }
+
+    function removeFromCart(productId, size, color) {
+        if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+            fetch('/Cart/RemoveItem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    productId: productId,
+                    size: size,
+                    color: color
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadCartItems();
+                    updateCartBadge();
+                }
+            });
+        }
+    }
+
+    function updateCartBadge() {
+        fetch('/Cart/GetCartCount')
+            .then(response => response.json())
+            .then(data => {
+                const cartButton = document.querySelector('[data-bs-target="#cartOffcanvas"]');
+                let badge = cartButton.querySelector('.badge.bg-danger');
+                
+                if (data.count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle';
+                        badge.style.fontSize = '0.65rem';
+                        cartButton.appendChild(badge);
+                    }
+                    badge.textContent = data.count;
+                } else {
+                    if (badge) {
+                        badge.remove();
+                    }
+                }
+            });
+    }
+</script>

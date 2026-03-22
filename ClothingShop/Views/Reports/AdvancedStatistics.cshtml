@@ -1,0 +1,343 @@
+@{
+    ViewData["Title"] = "Báo cáo nâng cao";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Chọn khoảng thời gian</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Loại báo cáo</label>
+                        <select name="period" class="form-select" onchange="this.form.submit()">
+                            <option value="month" selected="@(ViewBag.Period == "month")">Theo tháng</option>
+                            <option value="quarter" selected="@(ViewBag.Period == "quarter")">Theo quý</option>
+                            <option value="year" selected="@(ViewBag.Period == "year")">Theo năm</option>
+                        </select>
+                    </div>
+                    
+                    @if (ViewBag.Period == "month")
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Tháng</label>
+                            <select name="month" class="form-select" onchange="this.form.submit()">
+                                @for (int i = 1; i <= 12; i++)
+                                {
+                                    <option value="@i" selected="@(ViewBag.Month == i)">Tháng @i</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    
+                    @if (ViewBag.Period == "quarter")
+                    {
+                        <div class="col-md-3">
+                            <label class="form-label">Quý</label>
+                            <select name="quarter" class="form-select" onchange="this.form.submit()">
+                                @for (int i = 1; i <= 4; i++)
+                                {
+                                    <option value="@i" selected="@(ViewBag.Quarter == i)">Quý @i</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Năm</label>
+                        <select name="year" class="form-select" onchange="this.form.submit()">
+                            @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 5; i--)
+                            {
+                                <option value="@i" selected="@(ViewBag.Year == i)">@i</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sync me-2"></i>Cập nhật
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6 class="mb-2">Tổng đơn hàng</h6>
+                <h2 class="mb-0">@ViewBag.TotalOrders</h2>
+                <small>Hoàn thành: @ViewBag.CompletedOrders</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="mb-2">Doanh thu</h6>
+                <h2 class="mb-0">@ViewBag.TotalRevenue.ToString("N0")₫</h2>
+                <small>Giá trị TB: @ViewBag.AverageOrderValue.ToString("N0")₫</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h6 class="mb-2">Chi phí</h6>
+                <h2 class="mb-0">@ViewBag.TotalCost.ToString("N0")₫</h2>
+                <small>Từ sản phẩm đã bán</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h6 class="mb-2">Lợi nhuận</h6>
+                <h2 class="mb-0">@ViewBag.TotalProfit.ToString("N0")₫</h2>
+                <small>Tỷ suất: @ViewBag.ProfitMargin.ToString("N1")%</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ tài chính theo ngày - Full width -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Biểu đồ tài chính - @ViewBag.PeriodName</h5>
+                <div class="btn-group">
+                    <a href="/Admin/Reports/ExportRevenueExcel?startDate=@ViewBag.StartDate&endDate=@ViewBag.EndDate" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </a>
+                    <a href="/Admin/Reports/ExportRevenuePdf?startDate=@ViewBag.StartDate&endDate=@ViewBag.EndDate" class="btn btn-danger btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="70"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hàng dưới: Top 10 danh mục + Trạng thái đơn hàng -->
+<div class="row g-4 mb-4">
+    <!-- Top 10 danh mục (7 ngày gần nhất) -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Top 10 danh mục có doanh thu cao nhất (7 ngày gần nhất)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trạng thái đơn hàng -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Trạng thái đơn hàng</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-fire me-2"></i>Top 10 sản phẩm bán chạy nhất (7 ngày gần nhất)</h5>
+                <a href="/Admin/Reports/ExportBestSellersExcel" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>Export Excel
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="text-end">Số lượng bán</th>
+                                <th class="text-end">Doanh thu</th>
+                                <th class="text-end">Chi phí</th>
+                                <th class="text-end">Lợi nhuận</th>
+                                <th class="text-end">Tỷ suất</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int rank = 1;
+                                foreach (var item in ViewBag.BestSellers)
+                                {
+                                    var margin = item.TotalRevenue > 0 ? (item.TotalProfit / item.TotalRevenue * 100) : 0;
+                                    <tr>
+                                        <td><span class="badge bg-primary">@rank</span></td>
+                                        <td>@item.ProductName</td>
+                                        <td class="text-end">@item.TotalQuantity</td>
+                                        <td class="text-end">@item.TotalRevenue.ToString("N0")₫</td>
+                                        <td class="text-end text-danger">@item.TotalCost.ToString("N0")₫</td>
+                                        <td class="text-end fw-bold text-success">@item.TotalProfit.ToString("N0")₫</td>
+                                        <td class="text-end">
+                                            <span class="badge @(margin >= 30 ? "bg-success" : margin >= 15 ? "bg-warning" : "bg-danger")">
+                                                @margin.ToString("N1")%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    rank++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        @{
+            var dailyFinancial = (IEnumerable<dynamic>)ViewBag.DailyFinancial;
+            var labels = dailyFinancial.Select(x => ((DateTime)x.Date).ToString("dd/MM")).ToList();
+            var revenues = dailyFinancial.Select(x => (decimal)x.Revenue).ToList();
+            var costs = dailyFinancial.Select(x => (decimal)x.Cost).ToList();
+            var profits = dailyFinancial.Select(x => (decimal)x.Profit).ToList();
+        }
+        
+        // Biểu đồ tài chính
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(labels)),
+                datasets: [
+                    {
+                        label: 'Doanh thu',
+                        data: @Html.Raw(Json.Serialize(revenues)),
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Chi phí',
+                        data: @Html.Raw(Json.Serialize(costs)),
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Lợi nhuận',
+                        data: @Html.Raw(Json.Serialize(profits)),
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('vi-VN') + '₫';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + '₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Biểu đồ trạng thái đơn hàng
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.StatusData)),
+                    backgroundColor: ['#ffc107', '#0d6efd', '#198754', '#dc3545', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Biểu đồ doanh thu theo danh mục
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.CategoryLabels)),
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: @Html.Raw(Json.Serialize(ViewBag.CategoryData)),
+                    backgroundColor: '#198754'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + '₫'
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => value.toLocaleString('vi-VN') + '₫'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

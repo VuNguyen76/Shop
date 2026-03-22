@@ -1,0 +1,376 @@
+@model User
+@{
+    ViewData["Title"] = $"Chi tiết khách hàng - {Model.FullName}";
+    var orders = ViewBag.Orders as List<Order> ?? new List<Order>();
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-user me-2"></i>Chi tiết khách hàng
+        </h2>
+        <a href="/Admin/Customers" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- THÔNG TIN KHÁCH HÀNG -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Thông tin cá nhân</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="avatar-circle-large mx-auto mb-3">
+                        @Model.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    <h4 class="fw-bold mb-1">@Model.FullName</h4>
+                    @if (Model.IsAdmin)
+                    {
+                        <span class="badge bg-danger mb-3">Quản trị viên</span>
+                    }
+                    else if (Model.IsActive)
+                    {
+                        <span class="badge bg-success mb-3">Hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary mb-3">Đã khóa</span>
+                    }
+                    
+                    <hr>
+                    
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="text-muted small">Email:</label>
+                            <p class="mb-0"><i class="fas fa-envelope me-2"></i>@Model.Email</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Số điện thoại:</label>
+                            <p class="mb-0"><i class="fas fa-phone me-2"></i>@Model.PhoneNumber</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Giới tính:</label>
+                            <p class="mb-0"><i class="fas fa-venus-mars me-2"></i>@Model.Gender</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Ngày đăng ký:</label>
+                            <p class="mb-0"><i class="fas fa-calendar me-2"></i>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
+                            <i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin
+                        </button>
+                        
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                            <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                        </button>
+                        
+                        @if (!Model.IsAdmin)
+                        {
+                            <form action="/Admin/Customers/ToggleStatus" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                @if (Model.IsActive)
+                                {
+                                    <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Bạn có chắc muốn khóa tài khoản này?')">
+                                        <i class="fas fa-lock me-2"></i>Khóa tài khoản
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Bạn có chắc muốn mở khóa tài khoản này?')">
+                                        <i class="fas fa-unlock me-2"></i>Mở khóa tài khoản
+                                    </button>
+                                }
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- THỐNG KÊ -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Thống kê</h5>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Tổng đơn hàng</div>
+                            <div class="stat-value">@ViewBag.TotalOrders</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Tổng chi tiêu</div>
+                            <div class="stat-value text-danger">@ViewBag.TotalSpent.ToString("N0")₫</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">Đơn đang xử lý</div>
+                            <div class="stat-value">@ViewBag.PendingOrders</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LỊCH SỬ ĐƠN HÀNG -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Lịch sử đơn hàng</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (orders.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã đơn</th>
+                                        <th>Ngày đặt</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Tổng tiền</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in orders)
+                                    {
+                                        var badgeClass = order.Status switch
+                                        {
+                                            "Chờ xác nhận" => "bg-warning text-dark",
+                                            "Chờ lấy hàng" => "bg-info",
+                                            "Chờ giao hàng" => "bg-primary",
+                                            "Đã giao" => "bg-success",
+                                            "Đã hủy" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        
+                                        <tr>
+                                            <td><strong>#@order.Id.ToString("D6")</strong></td>
+                                            <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">@order.Items.Sum(i => i.Quantity)</span>
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">@order.TotalAmount.ToString("N0")₫</td>
+                                            <td class="text-center">
+                                                <span class="badge @badgeClass">@order.Status</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="/Admin/Orders/Details/@order.Id" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Khách hàng chưa có đơn hàng nào</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 2.5rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+</style>
+
+
+<!-- Modal Chỉnh sửa thông tin -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Admin/Customers/Update" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin khách hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" name="fullName" class="form-control" value="@Model.FullName" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" value="@Model.Email" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Giới tính</label>
+                        <select name="gender" class="form-select">
+                            <option value="">Chọn giới tính</option>
+                            <option value="Nam" selected="@(Model.Gender == "Nam")">Nam</option>
+                            <option value="Nữ" selected="@(Model.Gender == "Nữ")">Nữ</option>
+                            <option value="Khác" selected="@(Model.Gender == "Khác")">Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Đặt lại mật khẩu -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Admin/Customers/ResetPassword" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-key me-2"></i>Đặt lại mật khẩu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lưu ý:</strong> Mật khẩu mới sẽ được áp dụng ngay lập tức. Khách hàng sẽ cần sử dụng mật khẩu mới để đăng nhập.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
+                        <input type="password" name="newPassword" class="form-control" placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)" required minlength="6" />
+                        <small class="text-muted">Mật khẩu nên có ít nhất 6 ký tự</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" required minlength="6" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning" onclick="return validatePassword()">
+                        <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validatePassword() {
+        const newPassword = document.querySelector('input[name="newPassword"]').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert('Mật khẩu xác nhận không khớp!');
+            return false;
+        }
+        
+        if (newPassword.length < 6) {
+            alert('Mật khẩu phải có ít nhất 6 ký tự!');
+            return false;
+        }
+        
+        return confirm('Bạn có chắc muốn đặt lại mật khẩu cho khách hàng này?');
+    }
+</script>

@@ -1,0 +1,149 @@
+@model PaymentInfo
+@{
+    ViewData["Title"] = "Cài đặt thanh toán";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-cog me-2"></i>Cài đặt thông tin thanh toán
+        </h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="UpdatePaymentSettings" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            <!-- THÔNG TIN NGÂN HÀNG -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-university me-2"></i>Thông tin ngân hàng
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label asp-for="BankName" class="form-label fw-bold">
+                                Tên ngân hàng <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="BankName" class="form-control" placeholder="VD: Vietcombank, VietinBank, BIDV..." required />
+                            <span asp-validation-for="BankName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="BankAccountNumber" class="form-label fw-bold">
+                                Số tài khoản <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="BankAccountNumber" class="form-control" placeholder="VD: 1234567890" required />
+                            <span asp-validation-for="BankAccountNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="BankAccountName" class="form-label fw-bold">
+                                Chủ tài khoản <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="BankAccountName" class="form-control" placeholder="VD: NGUYEN VAN A" required style="text-transform: uppercase;" />
+                            <span asp-validation-for="BankAccountName" class="text-danger"></span>
+                            <small class="text-muted">Nhập chữ IN HOA không dấu</small>
+                        </div>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Thông tin này sẽ hiển thị cho khách hàng khi chọn thanh toán chuyển khoản ngân hàng.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THÔNG TIN MOMO -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-mobile-alt me-2"></i>Thông tin ví MoMo
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label asp-for="MoMoPhone" class="form-label fw-bold">
+                                Số điện thoại MoMo <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="MoMoPhone" class="form-control" placeholder="VD: 0901234567" required pattern="[0-9]{10,11}" />
+                            <span asp-validation-for="MoMoPhone" class="text-danger"></span>
+                            <small class="text-muted">Nhập 10-11 số</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MoMoName" class="form-label fw-bold">
+                                Tên tài khoản MoMo <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="MoMoName" class="form-control" placeholder="VD: NGUYEN VAN A" required style="text-transform: uppercase;" />
+                            <span asp-validation-for="MoMoName" class="text-danger"></span>
+                            <small class="text-muted">Nhập chữ IN HOA không dấu</small>
+                        </div>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Thông tin này sẽ hiển thị cho khách hàng khi chọn thanh toán qua ví MoMo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NÚT LƯU -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-5">
+                <i class="fas fa-save me-2"></i>Lưu thay đổi
+            </button>
+        </div>
+    </form>
+
+    <!-- THÔNG TIN CẬP NHẬT -->
+    @if (Model.UpdatedAt != DateTime.MinValue)
+    {
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                Cập nhật lần cuối: @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+            </small>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Tự động chuyển sang chữ in hoa
+        document.querySelectorAll('input[style*="text-transform: uppercase"]').forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        });
+
+        // Validate số điện thoại
+        document.querySelector('input[name="MoMoPhone"]').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+}

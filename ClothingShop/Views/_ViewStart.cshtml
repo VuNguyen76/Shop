@@ -1,0 +1,4 @@
+﻿@{
+    var isAdmin = Context.Request.Path.StartsWithSegments("/Admin");
+    Layout = isAdmin ? "_AdminLayout" : "_Layout";
+}

@@ -1,0 +1,45 @@
+@model dynamic
+
+<!-- Modal tạo ticket hỗ trợ -->
+<div class="modal fade" id="createTicketModal" tabindex="-1" aria-labelledby="createTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="margin-top: 5rem;">
+        <div class="modal-content">
+
+            <form asp-controller="Support" asp-action="Create" method="post">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="createTicketModalLabel">
+                        <i class="fas fa-plus-circle me-2"></i>Tạo yêu cầu hỗ trợ mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
+                        <input type="text" name="subject" class="form-control" required maxlength="200"
+                               placeholder="Ví dụ: Hỏi về sản phẩm, Vấn đề đơn hàng...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nội dung <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control" rows="3" required maxlength="2000"
+                                  placeholder="Mô tả chi tiết vấn đề của bạn..."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

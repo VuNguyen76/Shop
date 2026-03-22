@@ -1,0 +1,108 @@
+@model List<ClothingShop.Models.InventoryTransaction>
+@{
+    ViewData["Title"] = "Lịch sử Kho hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Lọc giao dịch</h5>
+                <div>
+                    <a href="/Admin/Inventory/ImportStock" class="btn btn-success btn-sm">
+                        <i class="fas fa-arrow-down me-1"></i>Nhập kho
+                    </a>
+                    <a href="/Admin/Inventory/ExportStock" class="btn btn-warning btn-sm">
+                        <i class="fas fa-arrow-up me-1"></i>Xuất kho
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <select name="type" class="form-select" onchange="this.form.submit()">
+                            <option value="">Tất cả loại</option>
+                            <option value="Nhập" selected="@(ViewBag.Type == "Nhập")">Nhập kho</option>
+                            <option value="Xuất" selected="@(ViewBag.Type == "Xuất")">Xuất kho</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="startDate" class="form-control" value="@ViewBag.StartDate" />
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="endDate" class="form-control" value="@ViewBag.EndDate" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6>Tổng nhập</h6>
+                <h2>@ViewBag.TotalImport</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h6>Tổng xuất</h6>
+                <h2>@ViewBag.TotalExport</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Lịch sử giao dịch</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Loại</th>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Lý do</th>
+                        <th>Người thực hiện</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (item.Type == "Nhập")
+                                {
+                                    <span class="badge bg-success">Nhập</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Xuất</span>
+                                }
+                            </td>
+                            <td>@item.Product?.Name</td>
+                            <td><strong>@item.Quantity</strong></td>
+                            <td>@item.Reason</td>
+                            <td>@item.Creator?.FullName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

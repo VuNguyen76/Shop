@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Xác thực OTP";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                        <h2 class="fw-bold">Xác thực OTP</h2>
+                        <p class="text-muted">Mã OTP đã được gửi đến</p>
+                        <p class="fw-bold text-primary">@ViewBag.Email</p>
+                    </div>
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="VerifyOTP" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>Nhập mã OTP (6 số)
+                            </label>
+                            <input type="text" name="otp" class="form-control form-control-lg text-center" 
+                                   placeholder="000000" maxlength="6" pattern="[0-9]{6}" 
+                                   style="letter-spacing: 10px; font-size: 24px;" required autofocus />
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>Mã có hiệu lực trong 5 phút
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
+                            <i class="fas fa-check me-2"></i>Xác thực
+                        </button>
+
+                        <div class="text-center">
+                            <a asp-action="ForgotPassword" class="text-decoration-none">
+                                <i class="fas fa-redo me-1"></i>Gửi lại mã OTP
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Chỉ cho phép nhập số
+        document.querySelector('input[name="otp"]').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+}

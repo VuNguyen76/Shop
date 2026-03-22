@@ -1,0 +1,375 @@
+@model List<ClothingShop.Models.Product>
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-4 fw-bold">
+        <i class="fas fa-heart text-danger"></i> SẢN PHẨM YÊU THÍCH
+    </h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5 mb-5">
+            <i class="fas fa-heart-broken" style="font-size: 80px; color: #ddd;"></i>
+            <h4 class="mt-4 text-muted">Chưa có sản phẩm yêu thích</h4>
+            <p class="text-muted">Hãy thêm sản phẩm bạn thích vào danh sách này</p>
+        </div>
+
+        @if (ViewBag.RecommendedProducts != null)
+        {
+            <div class="container">
+                <h4 class="mb-4 text-center"><i class="fas fa-star me-2 text-warning"></i>Sản phẩm đề xuất cho bạn</h4>
+                <div class="row g-4">
+                    @foreach (var product in ViewBag.RecommendedProducts)
+                    {
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card h-100 shadow-sm product-card">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: contain; background: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-truncate fw-bold">@product.Name</h6>
+                                        <p class="text-danger fw-bold mb-2 fs-5">@product.Price.ToString("N0") đ</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-light text-dark">@product.Category</span>
+                                            <span class="text-muted small">@product.Gender</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="row">
+            <!-- SIDEBAR LỌC -->
+            <div class="col-lg-3">
+                <div class="sidebar-filter sticky-top bg-white rounded-4 shadow-sm p-4" style="top: 110px; z-index: 900;">
+                    <h5 class="fw-bold mb-4 text-uppercase text-dark">Bộ lọc</h5>
+
+                    <!-- TÌM KIẾM -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Tìm kiếm</h6>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Tìm sản phẩm...">
+                    </div>
+
+                    <!-- LOẠI SẢN PHẨM -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Loại sản phẩm</h6>
+                        <select id="categoryFilter" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="Áo">Áo</option>
+                            <option value="Quần">Quần</option>
+                            <option value="Giày">Giày</option>
+                            <option value="Phụ kiện">Phụ kiện</option>
+                        </select>
+                    </div>
+
+                    <!-- GIỚI TÍNH -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Giới tính</h6>
+                        <select id="genderFilter" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Unisex">Unisex</option>
+                        </select>
+                    </div>
+
+                    <!-- SẮP XẾP GIÁ -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-3">Sắp xếp</h6>
+                        <select id="sortFilter" class="form-select">
+                            <option value="newest">Mới nhất</option>
+                            <option value="price_asc">Giá thấp đến cao</option>
+                            <option value="price_desc">Giá cao đến thấp</option>
+                            <option value="name">Tên A-Z</option>
+                        </select>
+                    </div>
+
+                    <!-- NÚT XÓA BỘ LỌC -->
+                    <div class="d-grid">
+                        <button id="clearFilters" class="btn btn-outline-secondary">
+                            <i class="fas fa-redo"></i> Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH SẢN PHẨM -->
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">
+                        Hiển thị <span id="productCount">@Model.Count</span> sản phẩm
+                    </h5>
+                </div>
+
+                <div class="row g-4" id="productGrid">
+                    @foreach (var product in Model)
+                    {
+                        <div class="col-md-4 col-sm-6 product-item" 
+                             data-name="@product.Name.ToLower()" 
+                             data-category="@product.Category" 
+                             data-gender="@product.Gender"
+                             data-price="@product.Price"
+                             data-created="@product.CreatedAt.Ticks">
+                            <div class="card h-100 shadow-sm position-relative product-card">
+                                <!-- Nút xóa khỏi wishlist -->
+                                <button class="btn btn-sm position-absolute top-0 end-0 m-2 wishlist-btn active" 
+                                        data-product-id="@product.Id"
+                                        style="z-index: 10; background: white; border-radius: 50%; width: 35px; height: 35px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                    <i class="fas fa-heart text-danger"></i>
+                                </button>
+
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: contain; background: #f8f9fa;">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-truncate fw-bold">@product.Name</h6>
+                                        <p class="text-danger fw-bold mb-2 fs-5">@product.Price.ToString("N0") đ</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-light text-dark">@product.Category</span>
+                                            <span class="text-muted small">@product.Gender</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Thông báo không tìm thấy -->
+                <div id="noResults" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Không tìm thấy sản phẩm phù hợp</h5>
+                    <p class="text-muted">Thử thay đổi bộ lọc hoặc tìm kiếm khác</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Xử lý nút wishlist
+        document.querySelectorAll('.wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const productId = this.dataset.productId;
+                
+                try {
+                    const response = await fetch('/Wishlist/Toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ productId: parseInt(productId) })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Xóa card khỏi trang với animation
+                        const card = this.closest('.product-item');
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.8)';
+                        
+                        setTimeout(() => {
+                            card.remove();
+                            updateProductCount();
+                            
+                            // Kiểm tra nếu không còn sản phẩm nào
+                            if (document.querySelectorAll('.product-item').length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                        
+                        // Hiển thị thông báo
+                        showToast(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Có lỗi xảy ra', 'error');
+                }
+            });
+        });
+
+        // Hàm lọc và tìm kiếm
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const gender = document.getElementById('genderFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            
+            let products = Array.from(document.querySelectorAll('.product-item'));
+            let visibleCount = 0;
+            
+            // Lọc sản phẩm
+            products.forEach(product => {
+                const name = product.dataset.name;
+                const productCategory = product.dataset.category;
+                const productGender = product.dataset.gender;
+                
+                let show = true;
+                
+                // Tìm kiếm theo tên
+                if (searchTerm && !name.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                // Lọc theo category
+                if (category && productCategory !== category) {
+                    show = false;
+                }
+                
+                // Lọc theo gender
+                if (gender && productGender !== gender) {
+                    show = false;
+                }
+                
+                if (show) {
+                    product.style.display = '';
+                    visibleCount++;
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+            
+            // Sắp xếp
+            const visibleProducts = products.filter(p => p.style.display !== 'none');
+            
+            visibleProducts.sort((a, b) => {
+                switch(sort) {
+                    case 'price_asc':
+                        return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    case 'price_desc':
+                        return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    case 'name':
+                        return a.dataset.name.localeCompare(b.dataset.name);
+                    case 'newest':
+                    default:
+                        return parseFloat(b.dataset.created) - parseFloat(a.dataset.created);
+                }
+            });
+            
+            // Sắp xếp lại DOM
+            const grid = document.getElementById('productGrid');
+            visibleProducts.forEach(product => {
+                grid.appendChild(product);
+            });
+            
+            // Cập nhật số lượng
+            document.getElementById('productCount').textContent = visibleCount;
+            
+            // Hiển thị thông báo không tìm thấy
+            const noResults = document.getElementById('noResults');
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+        
+        // Cập nhật số lượng sản phẩm
+        function updateProductCount() {
+            const visibleProducts = document.querySelectorAll('.product-item:not([style*="display: none"])');
+            document.getElementById('productCount').textContent = visibleProducts.length;
+        }
+        
+        // Xóa bộ lọc
+        document.getElementById('clearFilters')?.addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('genderFilter').value = '';
+            document.getElementById('sortFilter').value = 'newest';
+            filterProducts();
+        });
+        
+        // Lắng nghe sự kiện thay đổi
+        document.getElementById('searchInput')?.addEventListener('input', filterProducts);
+        document.getElementById('categoryFilter')?.addEventListener('change', filterProducts);
+        document.getElementById('genderFilter')?.addEventListener('change', filterProducts);
+        document.getElementById('sortFilter')?.addEventListener('change', filterProducts);
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'error' ? 'danger' : 'success'} position-fixed top-0 start-50 translate-middle-x mt-3`;
+            toast.style.zIndex = '9999';
+            toast.style.minWidth = '300px';
+            toast.style.textAlign = 'center';
+            toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+    </script>
+}
+
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+    }
+    
+    .product-item {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .wishlist-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .wishlist-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+    }
+    
+    .sidebar-filter {
+        border: 1px solid #eee;
+        max-height: calc(100vh - 130px);
+        overflow-y: auto;
+    }
+    
+    .sidebar-filter::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .sidebar-filter::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .sidebar-filter::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    .sidebar-filter::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    
+    .card-title {
+        min-height: 2.4em;
+        line-height: 1.2em;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+</style>

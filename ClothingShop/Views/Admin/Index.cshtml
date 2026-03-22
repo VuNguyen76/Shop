@@ -1,0 +1,201 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <a asp-action="Products" class="text-decoration-none">
+            <div class="card text-white bg-primary card-hover">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Sản phẩm</h5>
+                        <h2 class="mb-0">@ViewBag.TotalProducts</h2>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Orders" class="text-decoration-none">
+            <div class="card text-white bg-danger card-hover">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Đơn hàng</h5>
+                        <h2 class="mb-0">@ViewBag.TotalOrders</h2>
+                        <small class="opacity-75">@ViewBag.PendingOrders chờ xác nhận</small>
+                    </div>
+                    <i class="fas fa-shopping-bag fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-success card-hover">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Khách hàng</h5>
+                    <h2 class="mb-0">@ViewBag.TotalUsers</h2>
+                    <small class="opacity-75">@ViewBag.ActiveCustomers mới (30 ngày)</small>
+                </div>
+                <i class="fas fa-users fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-info card-hover">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Doanh số (7 ngày)</h5>
+                    <h2 class="mb-0">@ViewBag.TotalRevenue.ToString("N0")₫</h2>
+                </div>
+                <i class="fas fa-chart-line fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thẻ thống kê tài chính -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Tổng Doanh Số</h6>
+                        <h3 class="mb-0 text-info">@ViewBag.TotalRevenue.ToString("N0")₫</h3>
+                        <small class="text-muted">7 ngày qua</small>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Tổng Chi Phí</h6>
+                        <h3 class="mb-0 text-warning">@ViewBag.TotalCost.ToString("N0")₫</h3>
+                        <small class="text-muted">Giá nhập hàng</small>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Lợi Nhuận</h6>
+                        <h3 class="mb-0 text-success">@ViewBag.TotalProfit.ToString("N0")₫</h3>
+                        <small class="text-muted">
+                            @{
+                                var margin = ViewBag.TotalRevenue > 0 ? (ViewBag.TotalProfit / ViewBag.TotalRevenue * 100) : 0;
+                            }
+                            Tỷ suất: @margin.ToString("F1")%
+                        </small>
+                    </div>
+                    <i class="fas fa-coins fa-2x text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Biểu đồ doanh số, chi phí, lợi nhuận 7 ngày -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>Phân tích tài chính 7 ngày gần nhất
+        </h5>
+        <small class="text-muted">Cập nhật: @DateTime.Now.ToString("dd/MM HH:mm")</small>
+    </div>
+    <div class="card-body">
+        <canvas id="financialChart" height="100"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('financialChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.RevenueLabels)),
+                datasets: [
+                    {
+                        label: 'Doanh số',
+                        data: @Html.Raw(Json.Serialize(ViewBag.RevenueData)),
+                        borderColor: '#0dcaf0',
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        tension: 0.4,
+                        fill: false,
+                        pointBackgroundColor: '#0dcaf0',
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Chi phí',
+                        data: @Html.Raw(Json.Serialize(ViewBag.CostData)),
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.4,
+                        fill: false,
+                        pointBackgroundColor: '#ffc107',
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Lợi nhuận',
+                        data: @Html.Raw(Json.Serialize(ViewBag.ProfitData)),
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#198754',
+                        pointRadius: 4,
+                        borderWidth: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('vi-VN') + '₫';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + '₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
