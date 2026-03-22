@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ClothingShop.Models;
 
 namespace ClothingShop.Data
@@ -46,7 +46,7 @@ namespace ClothingShop.Data
                 entity.Property(p => p.Description)
                       .HasMaxLength(1000);
                 entity.Property(p => p.CreatedAt)
-                      .HasDefaultValueSql("GETDATE()");
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -69,18 +69,18 @@ namespace ClothingShop.Data
                 entity.Property(u => u.Gender)
                       .HasMaxLength(10);
                 entity.Property(u => u.CreatedAt)
-                      .HasDefaultValueSql("GETDATE()");
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(u => u.IsAdmin)
                       .HasDefaultValue(false);
             });
 
-            // CẤU HÌNH ORDER
+            // C?U H�NH ORDER
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasKey(o => o.Id);
                 entity.Property(o => o.TotalAmount).HasColumnType("decimal(18,2)");
                 entity.Property(o => o.Status).HasMaxLength(20);
-                entity.Property(o => o.OrderDate).HasDefaultValueSql("GETDATE()");
+                entity.Property(o => o.OrderDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(o => o.FullName).HasMaxLength(100);
                 entity.Property(o => o.PhoneNumber).HasMaxLength(20);
                 entity.Property(o => o.Address).HasMaxLength(500);
@@ -89,7 +89,7 @@ namespace ClothingShop.Data
                 entity.Property(o => o.CancelledBy).HasMaxLength(20);
             });
 
-            // CẤU HÌNH ORDERITEM – SỬA TÊN BIẾN 'oi'
+            // C?U H�NH ORDERITEM � S?A T�N BI?N 'oi'
             modelBuilder.Entity<OrderItem>(entity =>
             {
                 entity.HasKey(oi => oi.Id);
@@ -97,13 +97,13 @@ namespace ClothingShop.Data
                 entity.Property(oi => oi.ProductName).HasMaxLength(200);       
             });
 
-            // CẤU HÌNH PRODUCTREVIEW
+            // C?U H�NH PRODUCTREVIEW
             modelBuilder.Entity<ProductReview>(entity =>
             {
                 entity.HasKey(r => r.Id);
                 entity.Property(r => r.Rating).IsRequired();
                 entity.Property(r => r.Comment).HasMaxLength(1000);
-                entity.Property(r => r.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(r => r.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 // Relationships
                 entity.HasOne(r => r.Product)
@@ -122,7 +122,7 @@ namespace ClothingShop.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // CẤU HÌNH PAYMENTINFO
+            // C?U H�NH PAYMENTINFO
             modelBuilder.Entity<PaymentInfo>(entity =>
             {
                 entity.HasKey(p => p.Id);
@@ -131,10 +131,10 @@ namespace ClothingShop.Data
                 entity.Property(p => p.BankAccountName).HasMaxLength(100);
                 entity.Property(p => p.MoMoPhone).HasMaxLength(20);
                 entity.Property(p => p.MoMoName).HasMaxLength(100);
-                entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(p => p.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
-            // CẤU HÌNH FASHIONCATEGORY
+            // C?U H�NH FASHIONCATEGORY
             modelBuilder.Entity<FashionCategory>(entity =>
             {
                 entity.HasKey(f => f.Id);
@@ -142,19 +142,19 @@ namespace ClothingShop.Data
                 entity.Property(f => f.ImageUrl).IsRequired().HasMaxLength(500);
                 entity.Property(f => f.ImageUrlAvif).HasMaxLength(500);
                 entity.Property(f => f.LinkUrl).HasMaxLength(200);
-                entity.Property(f => f.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(f => f.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
-            // CẤU HÌNH PRODUCTCATEGORY
+            // C?U H�NH PRODUCTCATEGORY
             modelBuilder.Entity<ProductCategory>(entity =>
             {
                 entity.HasKey(pc => pc.Id);
                 entity.Property(pc => pc.Name).IsRequired().HasMaxLength(100);
                 entity.Property(pc => pc.Description).HasMaxLength(500);
-                entity.Property(pc => pc.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(pc => pc.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
-            // CẤU HÌNH NOTIFICATION
+            // C?U H�NH NOTIFICATION
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.HasKey(n => n.Id);
@@ -162,7 +162,7 @@ namespace ClothingShop.Data
                 entity.Property(n => n.Message).IsRequired().HasMaxLength(1000);
                 entity.Property(n => n.Type).HasMaxLength(20);
                 entity.Property(n => n.IsRead).HasDefaultValue(false);
-                entity.Property(n => n.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(n => n.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(n => n.User)
                       .WithMany()
@@ -170,11 +170,11 @@ namespace ClothingShop.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // CẤU HÌNH WISHLISTITEM
+            // C?U H�NH WISHLISTITEM
             modelBuilder.Entity<WishlistItem>(entity =>
             {
                 entity.HasKey(w => w.Id);
-                entity.Property(w => w.AddedDate).HasDefaultValueSql("GETDATE()");
+                entity.Property(w => w.AddedDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(w => w.User)
                       .WithMany()
@@ -186,18 +186,18 @@ namespace ClothingShop.Data
                       .HasForeignKey(w => w.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
                       
-                // Đảm bảo mỗi user chỉ có 1 wishlist item cho mỗi product
+                // �?m b?o m?i user ch? c� 1 wishlist item cho m?i product
                 entity.HasIndex(w => new { w.UserId, w.ProductId }).IsUnique();
             });
 
-            // CẤU HÌNH CART
+            // C?U H�NH CART
             modelBuilder.Entity<Cart>(entity =>
             {
                 entity.HasKey(c => c.Id);
                 entity.Property(c => c.Quantity).IsRequired();
                 entity.Property(c => c.Size).HasMaxLength(20);
                 entity.Property(c => c.Color).HasMaxLength(50);
-                entity.Property(c => c.AddedDate).HasDefaultValueSql("GETDATE()");
+                entity.Property(c => c.AddedDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(c => c.User)
                       .WithMany()
@@ -209,17 +209,17 @@ namespace ClothingShop.Data
                       .HasForeignKey(c => c.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
                       
-                // Đảm bảo mỗi user chỉ có 1 cart item cho mỗi product+size+color
+                // �?m b?o m?i user ch? c� 1 cart item cho m?i product+size+color
                 entity.HasIndex(c => new { c.UserId, c.ProductId, c.Size, c.Color }).IsUnique();
             });
 
-            // CẤU HÌNH SUPPORT TICKET
+            // C?U H�NH SUPPORT TICKET
             modelBuilder.Entity<SupportTicket>(entity =>
             {
                 entity.HasKey(t => t.Id);
                 entity.Property(t => t.Subject).IsRequired().HasMaxLength(200);
                 entity.Property(t => t.Status).IsRequired().HasMaxLength(20);
-                entity.Property(t => t.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(t => t.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(t => t.User)
                       .WithMany()
@@ -227,12 +227,12 @@ namespace ClothingShop.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // CẤU HÌNH SUPPORT MESSAGE
+            // C?U H�NH SUPPORT MESSAGE
             modelBuilder.Entity<SupportMessage>(entity =>
             {
                 entity.HasKey(m => m.Id);
                 entity.Property(m => m.Message).IsRequired().HasMaxLength(2000);
-                entity.Property(m => m.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(m => m.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(m => m.Ticket)
                       .WithMany(t => t.Messages)
@@ -245,7 +245,7 @@ namespace ClothingShop.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // CẤU HÌNH INVENTORY TRANSACTION
+            // C?U H�NH INVENTORY TRANSACTION
             modelBuilder.Entity<InventoryTransaction>(entity =>
             {
                 entity.HasKey(it => it.Id);
@@ -254,7 +254,7 @@ namespace ClothingShop.Data
                 entity.Property(it => it.Reason).HasMaxLength(500);
                 entity.Property(it => it.Supplier).HasMaxLength(100);
                 entity.Property(it => it.Cost).HasColumnType("decimal(18,2)");
-                entity.Property(it => it.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(it => it.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(it => it.Product)
                       .WithMany()
@@ -272,12 +272,12 @@ namespace ClothingShop.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // CẤU HÌNH PRODUCT VIEW
+            // C?U H�NH PRODUCT VIEW
             modelBuilder.Entity<ProductView>(entity =>
             {
                 entity.HasKey(pv => pv.Id);
                 entity.Property(pv => pv.SessionId).HasMaxLength(50);
-                entity.Property(pv => pv.ViewedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(pv => pv.ViewedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
                 entity.HasOne(pv => pv.User)
                       .WithMany()
@@ -289,7 +289,7 @@ namespace ClothingShop.Data
                       .HasForeignKey(pv => pv.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
                       
-                // Index để tìm kiếm nhanh
+                // Index d? t�m ki?m nhanh
                 entity.HasIndex(pv => new { pv.UserId, pv.ViewedAt });
                 entity.HasIndex(pv => new { pv.SessionId, pv.ViewedAt });
             });
